@@ -5,233 +5,239 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Colony Mapping</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
 <style>
-/* Layout: a bright game board. Big map on the left, a toy-box tray of pieces on the right (docked at the bottom on phones). */
+/* Sticker Book look: white paper on a dotted page, thick navy outlines, hard offset shadows, round "sticker" pieces. */
 :root{
-  --bg:#e8f4ff; --panel:#ffffff; --sea:#a9d8f5; --land:#fffaf0; --ink:#1b2f52; --muted:#4f6283; --line:#7d93b5;
-  --ne:#2f6fe4; --mid:#f0a00f; --south:#2a9d55; --bad:#e2483d; --good:#1f9a52; --focus:#7b4fe0;
-  --coin:#ffd75e; --coinedge:#c99312; --star:#ffbf1f; --turn:#7b4fe0;
-  --display:"Baloo 2", "Trebuchet MS", "Segoe UI", sans-serif;
-  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --ink:#1E2A44; --paper:#fff; --soft:#F2F5FA; --sea:#BFE8F2; --land:#fff; --muted:#4A5873; --line:#B8C2D6;
+  --ne:#F26B83; --mid:#FFD23F; --south:#9B7BEA; --maine:#E3F4F8; --vermont:#E6E6E6;
+  --good:#1B7F45; --goodbg:#E6F7EE; --bad:#B4462F; --softbg:#FFF7E6;
+  --focus:#2457D6; --coin:#FFD23F; --coinedge:#1E2A44; --star:#FFD23F;
+  --turn:#1B7F45;
+  --display:Fredoka,"Arial Rounded MT Bold","Segoe UI",sans-serif;
+  --body:Nunito,"Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f1b2e; --panel:#182844; --sea:#1d4f74; --land:#2a3b5a; --ink:#eef4ff; --muted:#b2c2dc; --line:#5d7398;
-  --ne:#5c93ff; --mid:#ffb52e; --south:#3fc272; --bad:#ff6b5e; --good:#4fd185; --focus:#a989ff;
-  --coin:#ffd75e; --coinedge:#c99312; --star:#ffcb3d; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0f1b2e; --panel:#182844; --sea:#1d4f74; --land:#2a3b5a; --ink:#eef4ff; --muted:#b2c2dc; --line:#5d7398;
-  --ne:#5c93ff; --mid:#ffb52e; --south:#3fc272; --bad:#ff6b5e; --good:#4fd185; --focus:#a989ff;
-  --coin:#ffd75e; --coinedge:#c99312; --star:#ffcb3d; color-scheme:dark}
-
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.45}
+*{box-sizing:border-box}
 html,body{overflow-x:clip}
-.wrap{max-width:1200px;margin:0 auto;padding-block:18px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+body{margin:0;background:#fff radial-gradient(#CBD6E8 1.5px,transparent 1.7px);background-size:22px 22px;color:var(--ink);font-family:var(--body);font-weight:700;font-size:18px;line-height:1.4}
+.wrap{max-width:1240px;margin:0 auto;padding-block:14px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+button{font-family:inherit;cursor:pointer}
 
-header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 24px;align-items:start}
-@media (max-width:820px){header{grid-template-columns:minmax(0,1fr)}}
-@media (min-width:821px){
-  .wrap{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"title rcol" "maps rcol" "done done" "bonus bonus";grid-template-rows:auto 1fr auto auto;column-gap:18px;align-items:start}
+/* Header */
+header{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.hdr-l{display:flex;align-items:center;flex-wrap:wrap;gap:6px 16px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,5.5vw,3rem);line-height:1;margin:0;text-shadow:3px 3px 0 var(--sea)}
+.sub{margin:0;font-size:1.15rem}
+.brand{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:2px solid var(--ink);border-radius:20px;padding:2px 10px;white-space:nowrap;background:#fff;color:var(--ink);text-decoration:none;transition:transform .1s}
+.brand:hover{transform:translateY(-2px)}
+.how{display:flex;flex-wrap:wrap;gap:12px;margin-top:4px}
+.how div{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:800;background:#fff;border:3px solid var(--ink);border-radius:30px;padding:4px 16px 4px 4px;box-shadow:3px 3px 0 var(--ink)}
+.how b{width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:1.05rem;flex:none}
+.howrule{margin:2px 0 0;font-size:1rem;font-weight:700;color:var(--muted)}
+
+@media (min-width:861px){
+  .wrap{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"title title" "maps rcol" "done done" "bonus bonus";grid-template-rows:auto 1fr auto auto;column-gap:22px;align-items:start}
   .wrap > header,.wrap > .board{display:contents}
   .titleblock{grid-area:title}
   .wrap > .board > .maps{grid-area:maps}
-  .wrap > .board > .colR{grid-area:rcol;align-self:stretch;display:flex;flex-direction:column;gap:14px;min-width:0}
-  .colR > .score{max-width:none;min-width:0}
+  .wrap > .board > .colR{grid-area:rcol;align-self:stretch;display:flex;flex-direction:column;gap:18px;min-width:0}
   #donePanel{grid-area:done}
   #bonus{grid-area:bonus}
 }
-.brand{text-decoration:none;cursor:pointer;transition:transform .1s;display:inline-block;font-family:var(--display);font-weight:800;font-size:1rem;letter-spacing:.02em;color:#fff;background:#1b2f52;border-radius:999px;padding:5px 16px 3px;margin-bottom:10px;box-shadow:0 3px 0 color-mix(in srgb,#1b2f52 60%,#000)}
-.brand:hover{transform:translateY(-2px)}
-.brand:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
-h1{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,6vw,3.6rem);line-height:.95;margin:0;letter-spacing:-.01em}
-h1 .flag{color:var(--ne)}
-.sub{margin:6px 0 0;font-size:1.15rem;color:var(--muted);max-width:40ch}
-.how{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.how div{display:flex;align-items:center;gap:8px;background:var(--panel);border-radius:999px;padding:6px 14px 6px 6px;font-weight:700;font-size:1rem}
-.howrule{margin:8px 0 0;font-size:1rem;font-weight:700;color:var(--muted)}
-.how b{font-family:var(--display);background:var(--ink);color:var(--panel);border-radius:50%;width:30px;height:30px;display:grid;place-items:center;font-size:1.05rem}
 
-.score{background:var(--panel);border-radius:18px;padding:12px 16px;display:grid;gap:8px;min-width:250px}
-.stars{font-family:var(--display);font-weight:800;font-size:1.6rem;display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
-.stars svg{width:32px;height:32px}
-.bar{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3em;gap:8px;align-items:center;font-size:.9rem;font-weight:700;font-variant-numeric:tabular-nums}
-.bar .track{height:12px;background:color-mix(in srgb,var(--line) 30%,transparent);border-radius:999px;overflow:hidden}
-.bar .track{display:block}
-.bar .fill{display:block;height:100%;width:0;background:var(--ne);border-radius:999px;transition:width .4s}
-.bar .fill.y{background:var(--coinedge)}
-.bar .fill.b{background:var(--focus)}
-.score{min-width:300px;max-width:440px;border:4px solid var(--turn);transition:border-color .3s}
-.scorehead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--display);font-size:1.05rem}
-.teamct{display:flex;align-items:center;gap:6px;font-family:var(--body);font-weight:700;font-size:.9rem;color:var(--muted)}
-.teamct button{font-family:var(--display);font-weight:800;font-size:1rem;width:28px;height:28px;border-radius:8px;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer;line-height:1}
+/* Shared card look */
+.score,.dock,.mapbox,.bonus,.done-panel,.legend{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink)}
+
+/* Score */
+.score{padding:14px 16px;display:grid;gap:12px;min-width:0}
+.scorehead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ribbon{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1;background:var(--ink);color:#fff;padding:7px 16px 6px;border-radius:30px;transform:rotate(-2deg);display:inline-block}
+.teamct{display:flex;align-items:center;gap:6px;font-size:1rem;font-weight:800}
+.teamct button{width:38px;height:38px;border-radius:50%;border:3px solid var(--ink);background:#fff;color:var(--ink);font-size:1.25rem;font-weight:800;line-height:1;display:grid;place-items:center;padding:0}
 .teamct button:disabled{opacity:.3;cursor:not-allowed}
-.teamct b{font-family:var(--display);font-size:1.1rem;color:var(--ink);min-width:1ch;text-align:center}
-.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px 8px;padding-top:6px}
-.tile{position:relative;min-width:0;font:inherit;text-align:left;border:3px solid transparent;background:color-mix(in srgb,var(--tc) 12%,var(--panel));color:var(--ink);border-radius:14px;padding:6px 10px 8px;cursor:pointer;display:grid;gap:2px}
-.tile .tn{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.9rem;white-space:nowrap}
-.tile .tn i{width:12px;height:12px;border-radius:50%;background:var(--tc);flex:none}
-.tile .tp{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
-.tile .tp small{font-size:.95rem;color:var(--muted);font-weight:700}
-.tile .tb{font-size:.78rem;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
-.tile .tt{height:8px;border-radius:999px;background:color-mix(in srgb,var(--line) 30%,transparent);overflow:hidden;display:block}
-.tile .tt span{display:block;height:100%;background:var(--tc);border-radius:999px;transition:width .4s}
-.tile.on{border-color:var(--tc);box-shadow:0 4px 0 var(--tc)}
-.tile .badge{position:absolute;top:-10px;right:8px;font-size:.72rem;font-weight:700;color:#fff;background:var(--tc);border-radius:999px;padding:1px 8px}
-.tile .pop{position:absolute;right:10px;top:22px;font-family:var(--display);font-weight:800;font-size:1.4rem;color:var(--tc);animation:popup 1.2s ease-out forwards;pointer-events:none}
+.teamct b{font-family:var(--display);font-size:1.3rem;min-width:1ch;text-align:center}
+.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px 12px;padding-top:12px}
+.tile{position:relative;min-width:0;font:inherit;text-align:left;border:3px solid var(--tc);background:var(--soft);color:var(--ink);border-radius:16px;padding:10px 12px 8px;display:grid;gap:2px;opacity:.8;transform:scale(.95);transition:transform .25s,opacity .25s}
+.tile.on{opacity:1;transform:scale(1);background:#fff;border-width:6px;padding:7px 9px 5px}
+.tile .tn{display:flex;align-items:center;gap:7px;font-weight:800;font-size:1.1rem;color:var(--tc);white-space:nowrap}
+.tile .ti,.tchip .ti{width:22px;height:22px;flex:none}
+.tile .tp{font-family:var(--display);font-weight:700;font-size:2.1rem;line-height:1;font-variant-numeric:tabular-nums}
+.tile .tp small{font-family:var(--body);font-size:1rem;font-weight:700}
+.tile .tb{font-size:.9rem;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tile .badge{position:absolute;top:-17px;right:10px;transform:rotate(4deg);color:#fff;background:var(--tc);font-family:var(--display);font-size:1rem;font-weight:700;padding:1px 11px;border-radius:20px;border:2px solid #fff;box-shadow:0 0 0 2px var(--tc);white-space:nowrap}
+.tile .badge.win{background:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.tile.win{border-color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.tile .pop{position:absolute;right:10px;top:26px;font-family:var(--display);font-weight:700;font-size:1.5rem;color:var(--tc);animation:popup 1.2s ease-out forwards;pointer-events:none}
 @keyframes popup{0%{opacity:0;transform:translateY(8px) scale(.7)}20%{opacity:1;transform:translateY(0) scale(1.15)}70%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
-.tile.win{border-color:var(--star);box-shadow:0 4px 0 var(--coinedge)}
-.bars{display:grid;gap:6px}
-.scorenote{margin:0;font-size:.82rem;color:var(--muted)}
-.winner{font-family:var(--display);font-weight:800;font-size:1.3rem;text-align:center;background:var(--coin);color:#3d2a00;border:3px solid var(--coinedge);border-radius:12px;padding:6px 10px 4px}
-.turnrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.turnrow > span{font-family:var(--display);font-weight:800;font-size:1.1rem}
-.turnchips{display:flex;gap:6px;flex-wrap:wrap}
-.tchip{font-family:var(--display);font-weight:700;font-size:1rem;border:3px solid var(--tc);background:var(--panel);color:var(--ink);border-radius:999px;padding:4px 12px 2px;cursor:pointer;display:flex;align-items:center;gap:6px}
-.tchip i{width:10px;height:10px;border-radius:50%;background:var(--tc)}
-.tchip.on{background:var(--tc);color:#fff}
-.tchip.on i{background:#fff}
-.bcard h3 .who{font-family:var(--body);font-size:.9rem;font-weight:700;color:#fff;background:var(--tc);border-radius:999px;padding:2px 10px}
-.bar .fill.b{background:var(--focus)}
+.bars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px}
+.bar{display:flex;align-items:center;gap:7px;font-size:.98rem;font-weight:800;font-variant-numeric:tabular-nums;min-width:0}
+.bar .track{flex:1;min-width:24px;height:16px;border:2px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--soft);display:block}
+.bar .fill{display:block;height:100%;width:0;background:repeating-linear-gradient(45deg,#1E2A44 0 8px,#4A6BB5 8px 16px);transition:width .6s}
+.scorenote{margin:0;font-size:1rem;line-height:1.35;font-weight:600}
+.winner{font-family:var(--display);font-weight:700;font-size:1.4rem;text-align:center;background:var(--coin);color:var(--ink);border:3px solid var(--ink);border-radius:14px;padding:6px 10px 4px;box-shadow:3px 3px 0 var(--ink)}
 
-.board{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
-@media (max-width:820px){.board{grid-template-columns:minmax(0,1fr)}}
-.maps{display:grid;gap:14px;min-width:0}
-.mapbox{background:var(--sea);border-radius:18px;overflow:hidden;border:4px solid var(--turn);transition:border-color .3s}
+/* Maps */
+.board{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.board{grid-template-columns:minmax(0,1fr)}}
+.maps{display:grid;gap:22px;min-width:0}
+.mapbox{overflow:hidden;background:var(--sea)}
 .mapbox svg{display:block;width:100%;height:auto;touch-action:none}
-.colony{fill:var(--land);stroke:var(--ink);stroke-opacity:.45;stroke-width:1.2;transition:fill .25s}
+.colony{fill:var(--land);stroke:var(--ink);stroke-width:2;stroke-linejoin:round;transition:fill .5s}
+#zoom .colony{stroke-width:2.4}
 .colony.ne{fill:var(--ne)} .colony.mid{fill:var(--mid)} .colony.south{fill:var(--south)}
-.colony.ne.part{fill:color-mix(in srgb,var(--ne) 40%,var(--land))}
-.colony.hover{fill:color-mix(in srgb,var(--focus) 50%,var(--land));stroke:var(--focus);stroke-opacity:1;stroke-width:3.5}
-.colony.hover.ne,.colony.hover.mid,.colony.hover.south{filter:brightness(1.2);stroke:var(--focus);stroke-opacity:1;stroke-width:3.5}
+path.colony[data-target="ME"]{fill:var(--maine)}
+path.colony[data-target="ME"].ne{fill:var(--ne)}
+.colony.hover{fill:#D9E6FF;stroke:var(--focus);stroke-width:4}
+.colony.hover.ne,.colony.hover.mid,.colony.hover.south{filter:brightness(1.1);stroke:var(--focus);stroke-width:4}
+.colony.hover.ne{fill:var(--ne)}.colony.hover.mid{fill:var(--mid)}.colony.hover.south{fill:var(--south)}
 .colony.flash{animation:flash .6s}
-@keyframes flash{50%{fill:var(--bad)}}
-.other{fill:color-mix(in srgb,var(--line) 25%,var(--sea));stroke:var(--line);stroke-width:1;stroke-dasharray:4 3}
-.hit{fill:transparent;stroke:var(--ink);stroke-opacity:.35;stroke-width:1.2;stroke-dasharray:3 3}
-.hit.hover{stroke:var(--focus);stroke-opacity:1;stroke-width:3}
-.ring{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-dasharray:6 4;opacity:.5;pointer-events:none}
-.maplabel{font-family:var(--display);font-weight:800;font-size:13px;fill:#fff;paint-order:stroke;stroke:rgba(10,20,40,.55);stroke-width:3px;pointer-events:none;text-anchor:middle}
-#zoom .maplabel{font-size:17px}
-.sealabel{font-family:var(--display);font-weight:700;font-size:24px;fill:var(--ink);opacity:.45;letter-spacing:.12em;pointer-events:none}
-.note{font-family:var(--body);font-size:11px;fill:var(--muted);pointer-events:none;font-style:italic}
-.mapfoot{font-size:.9rem;color:var(--muted);padding:10px 14px;background:var(--panel)}
-.zoomhead{font-family:var(--display);font-weight:700;font-size:1.3rem;padding:8px 14px;background:var(--panel);display:flex;gap:8px;align-items:center}
+@keyframes flash{50%{fill:#FBD2C9}}
+.other{fill:var(--vermont);stroke:var(--ink);stroke-width:2;stroke-dasharray:7 5}
+.hit{fill:transparent;stroke:var(--ink);stroke-opacity:.5;stroke-width:1.6;stroke-dasharray:4 3}
+.hit.hover{stroke:var(--focus);stroke-opacity:1;stroke-width:3.5}
+.ring{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:9 7;opacity:.75;pointer-events:none}
+.maplabel{font-family:var(--body);font-weight:800;font-size:14px;fill:var(--ink);paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;pointer-events:none;text-anchor:middle}
+#zoom .maplabel{font-size:18px}
+.maplabel .yr{font-weight:700}
+.sealabel{font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:2px;fill:#fff;stroke:var(--ink);stroke-width:3.5px;stroke-linejoin:round;paint-order:stroke;text-anchor:middle;pointer-events:none}
+.cmp{font-family:var(--display);font-weight:700;font-size:40px;fill:var(--ink)}
+.note{font-family:var(--body);font-weight:800;font-size:12px;fill:var(--ink);pointer-events:none}
+.mapfoot{font-size:1rem;line-height:1.4;font-weight:600;padding:10px 16px 12px;background:#fff;border-top:3px solid var(--ink)}
+.zoomhead{font-family:var(--display);font-weight:700;font-size:1.4rem;padding:10px 16px;background:#fff;border-bottom:3px solid var(--ink);display:flex;gap:10px;align-items:center}
 .zoomhead svg{width:24px;height:24px;flex:none}
+.boat{animation:drift 5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-8px) rotate(-2deg)}}
+.stampg{animation:slap .55s ease-out both;transform-box:fill-box;transform-origin:center}
+.stamptxt{font-family:var(--display);font-weight:700;font-size:56px;fill:var(--ink)}
+@keyframes slap{0%{transform:scale(2.2) rotate(12deg);opacity:0}60%{transform:scale(.92) rotate(-6deg);opacity:1}80%{transform:scale(1.06) rotate(-6deg)}100%{transform:scale(1) rotate(-6deg);opacity:1}}
 
-.side{display:grid;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);min-width:0}
-.dock{background:var(--panel);border-radius:18px;padding:16px;display:grid;gap:14px;border:4px solid var(--turn);box-shadow:0 4px 0 var(--turn);transition:border-color .3s,box-shadow .3s}
-.trayblock h2{font-family:var(--display);font-weight:800;font-size:1.4rem;margin:0;display:flex;align-items:center;gap:8px}
-.trayblock h2 .n{font-size:.85rem;font-family:var(--body);font-weight:700;color:var(--muted)}
-.trayblock .hint{margin:0 0 10px;color:var(--muted);font-size:1rem}
-.pieces{display:flex;flex-wrap:wrap;gap:10px}
-.piece{font-family:var(--display);font-weight:700;font-size:1.1rem;line-height:1.1;border:3px solid var(--turn);background:var(--land);color:var(--ink);border-radius:12px;padding:9px 14px 7px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 4px 0 var(--turn);transition:transform .1s,border-color .3s}
-.piece:hover{transform:translateY(-2px)}
-.yearchip{font-family:var(--display);font-weight:800;font-size:1.15rem;border:3px solid var(--coinedge);background:var(--coin);color:#3d2a00;border-radius:999px;padding:7px 14px 5px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 4px 0 var(--coinedge);font-variant-numeric:tabular-nums;transition:transform .1s}
-.yearchip:hover{transform:translateY(-2px)}
-.piece:focus-visible,.yearchip:focus-visible,button:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
-.piece.sel,.yearchip.sel{outline:4px solid var(--focus);outline-offset:3px;transform:translateY(-3px)}
-.locked .yearchip{filter:grayscale(1);opacity:.45;cursor:not-allowed;box-shadow:none}
-.locked .hint{font-weight:700;color:var(--ink)}
-.dragging{position:fixed;z-index:50;pointer-events:none;transform:rotate(-4deg) scale(1.08);box-shadow:0 12px 24px rgba(0,0,0,.28)}
-.shake{animation:shake .35s}
-@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
-.empty{color:var(--good);font-weight:700}
-
-.feedback{border-radius:14px;padding:12px 14px;background:color-mix(in srgb,var(--ne) 10%,var(--panel));min-height:5.4em;display:grid;gap:2px;align-content:start}
-.feedback.ok{background:color-mix(in srgb,var(--good) 16%,var(--panel))}
-.feedback.no{background:color-mix(in srgb,var(--bad) 13%,var(--panel))}
-.feedback .tag{font-family:var(--display);font-weight:800;font-size:1.35rem;line-height:1.1}
-.feedback.ok .tag{color:var(--good)} .feedback.no .tag{color:var(--bad)}
-.feedback p{margin:0;font-size:1.02rem}
-.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:1rem;font-weight:700;background:var(--panel);border-radius:14px;padding:10px 14px}
-.legend span{display:flex;align-items:center;gap:6px}
-.legend i{width:18px;height:18px;border-radius:5px;display:inline-block}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
-button.ctl{font-family:var(--display);font-weight:700;font-size:1rem;border:3px solid var(--ink);background:var(--panel);color:var(--ink);border-radius:12px;padding:6px 14px 4px;cursor:pointer}
+/* Play panel */
+.side{display:grid;gap:18px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);min-width:0}
+.dock{padding:14px 16px;display:grid;gap:14px}
+.turnrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:1.1rem;font-weight:800}
+.turnchips{display:flex;gap:8px;flex-wrap:wrap}
+.tchip{display:flex;align-items:center;gap:7px;min-height:44px;padding:3px 15px;border-radius:30px;border:3px solid var(--tc);background:#fff;color:var(--tc);font-size:1.05rem;font-weight:800}
+.tchip.on{background:var(--tc);color:#fff;border-width:5px;padding:1px 13px}
+.feedback{border:3px solid var(--ink);border-radius:14px;padding:8px 14px;min-height:76px;display:grid;gap:3px;align-content:center;background:var(--soft)}
+.feedback.ok{background:var(--goodbg)}
+.feedback.no{background:var(--softbg);border-color:#D9C9A0}
+.feedback .tag{font-family:var(--display);font-weight:600;font-size:1.3rem;line-height:1.2}
+.feedback p{margin:0;font-size:1.02rem;line-height:1.35;font-weight:600}
+.trayblock{display:block}
+.trayblock .pieces{margin-top:8px}
+.trayblock h2{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1;margin:0;display:inline}
+.trayblock .hint{display:inline;margin:0 0 0 10px;font-size:1rem;font-weight:600}
+.trayhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.pieces{display:flex;flex-wrap:wrap;gap:16px 16px;min-height:50px;padding:5px}
+.piece{display:flex;align-items:center;min-height:46px;padding:4px 18px;background:#fff;border:3px solid var(--ink);border-radius:30px;color:var(--ink);font-family:var(--body);font-size:1.08rem;font-weight:800;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink),4px 6px 0 5px rgba(30,42,68,.15);transition:transform .1s}
+.piece:hover{transform:translateY(-2px) rotate(-1deg)}
+.yearchip{position:relative;width:62px;height:62px;border-radius:50%;display:grid;place-items:center;padding:0;background:var(--coin);border:3px solid var(--ink);color:var(--ink);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink);font-family:var(--body);font-size:1.02rem;font-weight:800;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-variant-numeric:tabular-nums;transition:transform .1s}
+.yearchip:hover{transform:translateY(-2px) rotate(3deg)}
+.locked .yearchip{background:#E9ECF2;border-style:dashed;opacity:.55;cursor:not-allowed}
+.locked .yearchip::after{content:"";position:absolute;top:-9px;right:-9px;width:24px;height:24px;border-radius:50%;background:var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M12 2a5 5 0 0 1 5 5v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v3h6V7a3 3 0 0 0-3-3z'/%3E%3C/svg%3E") center/14px no-repeat}
+.locked .hint{color:var(--ink)}
+.piece:focus-visible,.yearchip:focus-visible,button:focus-visible,.brand:focus-visible{outline:4px solid var(--focus);outline-offset:4px}
+.piece.sel,.yearchip.sel{outline:4px solid var(--focus);outline-offset:6px;transform:translateY(-3px) rotate(-2deg)}
+.dragging{position:fixed;z-index:60;pointer-events:none;transform:rotate(4deg) scale(1.08);filter:drop-shadow(4px 10px 8px rgba(30,42,68,.35))}
+.shake{animation:wobble .6s ease}
+@keyframes wobble{0%,100%{transform:rotate(0)}20%{transform:rotate(-5deg) translateX(-5px)}40%{transform:rotate(5deg) translateX(5px)}60%{transform:rotate(-3deg)}80%{transform:rotate(3deg)}}
+.empty{color:var(--good);font-weight:800}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:1.05rem;font-weight:800;padding:10px 16px}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{width:24px;height:24px;border-radius:50%;border:3px solid var(--ink);display:inline-block}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+button.ctl{min-height:44px;padding:5px 18px;border-radius:30px;border:3px solid var(--ink);background:#fff;color:var(--ink);font-size:1.05rem;font-weight:800;box-shadow:3px 3px 0 var(--ink)}
+button.ctl:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 
 .burst{position:fixed;z-index:60;pointer-events:none;width:22px;height:22px;margin:-11px 0 0 -11px;animation:burst .8s ease-out forwards}
 .burst svg{width:100%;height:100%}
 @keyframes burst{0%{transform:translate(0,0) scale(.4);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1) rotate(160deg);opacity:0}}
 
-.done-panel{background:var(--panel);border-radius:18px;padding:18px;border:4px solid var(--star)}
-.done-panel h2{font-family:var(--display);font-weight:800;font-size:2rem;margin:0}
-.done-panel .hint{margin:4px 0 10px;font-size:1.15rem}
-.timeline{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
-.timeline li{display:grid;grid-template-columns:4em 9em minmax(0,1fr);gap:12px;align-items:baseline;font-size:1rem;border-top:2px dashed color-mix(in srgb,var(--line) 45%,transparent);padding-top:8px}
-.timeline .y{font-family:var(--display);font-weight:800;font-size:1.2rem}
-.timeline .c{font-weight:700}
-.timeline .c i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px}
+/* Finished panel */
+.done-panel{padding:22px;background-image:radial-gradient(#F26B83 4px,transparent 5px),radial-gradient(#FFD23F 4px,transparent 5px),radial-gradient(#9B7BEA 4px,transparent 5px),radial-gradient(#BFE8F2 4px,transparent 5px);background-size:110px 90px,130px 70px,90px 120px,70px 110px;background-position:10px 10px,40px 30px,70px 5px,20px 60px}
+.done-panel h2{font-family:var(--display);font-weight:700;font-size:2.6rem;line-height:1;margin:0;display:inline-block;background:#fff;padding:4px 14px;border-radius:14px}
+.done-panel .hint{margin:8px 0 10px;font-size:1.15rem;background:#fff;padding:4px 10px;border-radius:10px;display:inline-block}
+.timeline{list-style:none;margin:8px 0 0;padding:6px 14px;display:grid;gap:8px;background:#fff;border:3px solid var(--ink);border-radius:16px}
+.timeline li{display:grid;grid-template-columns:4em 10em minmax(0,1fr);gap:12px;align-items:baseline;font-size:1rem;font-weight:600;border-top:2px dashed var(--line);padding-top:8px}
+.timeline li:first-child{border-top:0}
+.timeline .y{font-family:var(--display);font-weight:700;font-size:1.25rem}
+.timeline .c{font-weight:800}
+.timeline .c i{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--ink);margin-right:6px}
 @media (max-width:560px){.timeline li{grid-template-columns:4em minmax(0,1fr)}.timeline .t{grid-column:2}}
 
-.bonus{background:var(--panel);border-radius:18px;padding:18px;border:4px dashed var(--turn);transition:border-color .3s;display:grid;gap:12px;scroll-margin-top:16px}
+/* Bonus */
+.bonus{padding:16px 20px 20px;display:grid;gap:14px;scroll-margin-top:16px}
 .bonushead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.bonus h2{font-family:var(--display);font-weight:800;font-size:2rem;margin:0;color:var(--focus)}
-.bpts{font-family:var(--display);font-weight:700;font-size:1.2rem;background:color-mix(in srgb,var(--focus) 14%,var(--panel));border-radius:999px;padding:4px 14px}
-.bpts b{font-size:1.5rem;font-variant-numeric:tabular-nums}
-.bintro{margin:0;color:var(--muted)}
-.bwait{font-weight:700;color:var(--muted);background:color-mix(in srgb,var(--line) 14%,transparent);border-radius:12px;padding:14px}
-.bcard{display:grid;gap:14px;border-radius:14px;padding:16px;background:color-mix(in srgb,var(--tc,var(--focus)) 8%,var(--panel));border:4px solid var(--tc,var(--focus))}
-.bcard.fin{border-width:2px;border-style:dashed}
-.btally{font-weight:700;font-size:1rem;margin:0}
-.btally b{font-family:var(--display);font-size:1.3rem;color:var(--tc,var(--focus))}
-.bcard h3{font-family:var(--display);font-weight:800;font-size:1.6rem;margin:0;display:flex;align-items:center;gap:10px}
-.bcard h3 i{width:18px;height:18px;border-radius:5px;display:inline-block}
-.bq{display:grid;gap:8px}
-.bq .qt{font-weight:700;font-size:1.1rem}
-.bopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
-.bopt{font:inherit;text-align:left;border:3px solid var(--ink);background:var(--panel);color:var(--ink);border-radius:14px;padding:10px 14px;cursor:pointer;box-shadow:0 4px 0 var(--ink);display:grid;gap:2px}
-.bopt b{font-family:var(--display);font-size:1.25rem;line-height:1.1}
-.bopt span{font-size:.92rem;color:var(--muted)}
-.bopt:hover:not(:disabled){transform:translateY(-2px)}
-.bopt:disabled{cursor:default;box-shadow:none;opacity:.55}
-.bopt.right{opacity:1;border-color:var(--good);background:color-mix(in srgb,var(--good) 16%,var(--panel))}
-.bopt.wrong{opacity:1;border-color:var(--bad);background:color-mix(in srgb,var(--bad) 13%,var(--panel))}
+.bonus h2{font-family:var(--display);font-weight:700;font-size:1.8rem;line-height:1;margin:0}
+.bpts{font-size:1.1rem;font-weight:800;border:3px solid var(--ink);border-radius:30px;padding:5px 16px;background:#fff;box-shadow:3px 3px 0 var(--ink)}
+.bpts b{font-family:var(--display);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.bintro{margin:0;font-size:1.05rem;font-weight:600}
+.bwait{font-weight:700;background:var(--soft);border:3px dashed var(--line);border-radius:16px;padding:14px 16px}
+#bonusBody{display:grid;gap:18px}
+.bcard{position:relative;display:grid;gap:14px;border-radius:20px;padding:22px 20px 18px;background:#fff;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--tc,var(--ink));scroll-margin-top:16px}
+.bcard::before{content:"";position:absolute;top:-14px;left:50%;transform:translateX(-50%) rotate(-3deg);width:130px;height:28px;background:rgba(191,232,242,.85);border:2px solid rgba(30,42,68,.25)}
+.bcard.fin{box-shadow:none;border-style:dashed;background:var(--soft)}
+.bcard.fin::before{display:none}
+.bcard h3{font-family:var(--display);font-weight:700;font-size:1.6rem;line-height:1.1;margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.bcard h3 i{width:22px;height:22px;border-radius:50%;border:3px solid var(--ink);display:inline-block}
+.bcard h3 .who{font-family:var(--body);font-size:.95rem;font-weight:800;color:#fff;background:var(--tc);border-radius:20px;padding:2px 12px}
+.bcard h3 em{margin-left:auto;font-style:normal;font-family:var(--body);font-size:.95rem;font-weight:800;border-radius:20px;padding:3px 12px;border:2px solid var(--ink);background:#fff}
+.bcard h3 em.open{background:var(--ink);color:#fff}
+.bq{display:grid;gap:10px}
+.bq .qt{font-weight:800;font-size:1.2rem}
+.qt small{font-weight:600;font-size:.95rem;margin-left:6px}
+.bopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
 .bopts.three{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
-.qt small{font-weight:400;color:var(--muted);font-size:.9rem;margin-left:6px}
-.bpick{margin:0;font-weight:700;color:var(--focus)}
-.bcard{scroll-margin-top:16px}
-.bcard h3 em{margin-left:auto;font-style:normal;font-family:var(--body);font-size:.95rem;font-weight:700;border-radius:999px;padding:3px 12px;background:color-mix(in srgb,var(--good) 18%,var(--panel));color:var(--good)}
-.bcard h3 em.open{background:var(--focus);color:#fff}
-.bcard.fin{background:color-mix(in srgb,var(--line) 8%,var(--panel))}
-.bdonehead{font-family:var(--display);font-weight:800;font-size:1.3rem;color:var(--muted);margin-top:6px}
-#bonusBody{display:grid;gap:14px}
-.bwhy{margin:0;font-size:1rem;border-left:5px solid var(--good);padding:4px 0 4px 12px}
-.bwhy.no{border-color:var(--bad)}
-.bwhy b{font-family:var(--display)}
-.bnext{justify-self:start;font-family:var(--display);font-weight:700;font-size:1.05rem;border:3px solid var(--focus);background:var(--focus);color:#fff;border-radius:12px;padding:6px 16px 4px;cursor:pointer}
-.bdone{display:flex;flex-wrap:wrap;gap:8px}
-.bdone span{font-size:.9rem;font-weight:700;border-radius:999px;padding:4px 12px;background:color-mix(in srgb,var(--line) 16%,transparent)}
-.jump{font:inherit;font-weight:700;margin-top:6px;justify-self:start;border:2px solid var(--focus);color:var(--focus);background:var(--panel);border-radius:999px;padding:3px 12px;cursor:pointer}
+.bopt{font:inherit;text-align:left;border:3px solid var(--ink);background:#fff;color:var(--ink);border-radius:18px;padding:10px 16px;box-shadow:3px 3px 0 var(--ink);display:grid;gap:3px;transition:background .2s,transform .1s}
+.bopt b{font-family:var(--display);font-weight:600;font-size:1.2rem;line-height:1.15}
+.bopt span{font-size:.95rem;font-weight:600}
+.bopt:hover:not(:disabled){transform:translateY(-2px)}
+.bopt:disabled{cursor:default;box-shadow:none;background:#F7F9FC;border-color:#D5DDEA;color:#7D8899}
+.bopt.right{background:#DDF5E6;border-color:var(--good);color:#14532D;opacity:1}
+.bopt.wrong{background:var(--soft);border-color:#8A95AA;color:#5A6680;opacity:1}
+.bopt.wrong b{text-decoration:line-through;text-decoration-thickness:2px}
+.bpick{margin:0;font-weight:800;color:var(--muted)}
+.bwhy{margin:0;font-size:1.02rem;font-weight:600;border-left:6px solid var(--good);padding:4px 0 4px 12px}
+.bwhy.no{border-color:var(--line)}
+.bwhy b{font-weight:800}
+.btally{font-weight:700;font-size:1rem;margin:0}
+.btally b{font-family:var(--display);font-size:1.3rem}
+.bdonehead{font-family:var(--display);font-weight:700;font-size:1.35rem;margin-top:6px}
+.jump{font:inherit;font-weight:800;margin-top:6px;justify-self:start;border:3px solid var(--ink);color:var(--ink);background:#fff;border-radius:30px;padding:3px 14px;box-shadow:3px 3px 0 var(--ink)}
 
 .barrow[hidden]{display:none}
-button.ctl.barrow{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--turn);color:#fff;border-color:color-mix(in srgb,var(--turn) 55%,#000);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.ctl.barrow{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--ink);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .barrow span{overflow:hidden;text-overflow:ellipsis}
 .barrow svg{width:20px;height:20px;flex:none;animation:nudge 1.1s ease-in-out infinite}
-.barrow:hover{filter:brightness(1.08)}
 @keyframes nudge{0%,100%{transform:translateY(-2px)}50%{transform:translateY(3px)}}
 @keyframes popin{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 .barrow.show{animation:popin .3s ease-out}
-@media (max-width:820px){
+
+@media (max-width:860px){
   body{font-size:17px}
-  .score{min-width:0;max-width:none}
-  .teams{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
-  .tile .tp{font-size:1.6rem}
-  button.ctl.barrow{position:fixed;z-index:40;left:50%;transform:translateX(-50%);flex:none;font-size:1.05rem;padding:8px 16px 6px;box-shadow:0 5px 0 color-mix(in srgb,var(--turn) 55%,#000),0 10px 24px rgba(0,0,0,.22)}
+  .how{gap:8px}.how div{font-size:.92rem;padding:3px 12px 3px 3px;box-shadow:2px 2px 0 var(--ink)}.how b{width:26px;height:26px;font-size:.9rem}
+  .bars{grid-template-columns:minmax(0,1fr)}
+  .teams{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+  .tile .tp{font-size:1.7rem}
+  button.ctl.barrow{position:fixed;z-index:40;left:50%;transform:translateX(-50%);flex:none;font-size:1.02rem;padding:8px 16px;box-shadow:0 5px 0 #000,0 10px 24px rgba(0,0,0,.22)}
   .barrow.show{animation:none}
   .side,.colR{display:contents}
   .colR > .score{order:0}
   .maps{order:1}
-  .dock{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);max-height:38vh;overflow:auto;order:2;gap:8px;padding:10px 12px;box-shadow:0 -6px 20px rgba(0,0,0,.2)}
+  .dock{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);max-height:40vh;overflow:auto;order:2;gap:8px;padding:10px 12px;box-shadow:0 -6px 20px rgba(30,42,68,.25)}
   .side > .legend,.side > .controls{order:3}
-  .dock .feedback{min-height:0;padding:8px 10px}
-  .dock .feedback .tag{font-size:1.1rem}
+  .dock .feedback{min-height:0;padding:6px 10px}
+  .dock .feedback .tag{font-size:1.08rem}
   .dock .feedback p{font-size:.92rem}
-  .trayblock h2{font-size:1.1rem}
+  .trayblock h2{font-size:1.15rem}
   .trayblock .hint{display:none}
-  .dock .pieces{gap:7px}
-  .dock .piece{font-size:.95rem;padding:6px 10px 4px;border-width:2px;box-shadow:0 3px 0 var(--turn)}
-  .dock .yearchip{font-size:.98rem;padding:4px 10px 2px;border-width:2px;box-shadow:0 3px 0 var(--coinedge)}
+  .dock .pieces{gap:10px 12px}
+  .dock .piece{font-size:.95rem;min-height:38px;padding:3px 12px;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
+  .dock .yearchip{width:52px;height:52px;font-size:.9rem;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.burst{display:none}}
+
 </style>
 <style>
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -250,9 +256,7 @@ img{max-width:100%}
 <div class="wrap">
   <header>
     <div class="titleblock">
-      <a class="brand" href="https://www.languagefirm.org/">The Language Firm</a>
-      <h1>Colony Mapping</h1>
-      <p class="sub">The 13 colonies fell off the map! Can you put them back?</p>
+      <div class="hdr-l"><h1>Colony Mapping</h1><p class="sub">The 13 colonies fell off the map! Can you put them back?</p><a class="brand" href="https://www.languagefirm.org/">The Language Firm</a></div>
       <div class="how">
         <div><b>1</b>Drag a colony onto the map</div>
         <div><b>2</b>Then drag its year onto it</div>
@@ -266,16 +270,30 @@ img{max-width:100%}
     <div class="maps">
       <div class="mapbox">
         <svg id="map" viewBox="0 0 620 760" role="img" aria-label="Map of the east coast showing the shapes of the thirteen colonies">
+<defs><pattern id="dots" width="36" height="36" patternUnits="userSpaceOnUse"><circle cx="9" cy="9" r="2.4" fill="#fff" opacity=".9"/><circle cx="27" cy="27" r="2.4" fill="#fff" opacity=".9"/></pattern></defs>
+          <rect x="-50" y="-50" width="720" height="860" fill="url(#dots)" pointer-events="none"/>
           <g id="land" class="landlayer"></g>
           <g id="labels"></g>
-          <text class="sealabel" x="450" y="600">ATLANTIC</text>
-          <text class="sealabel" x="470" y="630">OCEAN</text>
+          <g pointer-events="none" aria-hidden="true">
+            <text class="sealabel" x="526" y="452">Atlantic</text>
+            <text class="sealabel" x="526" y="488">Ocean</text>
+            <g transform="translate(566 548) scale(.42)"><g class="boat">
+              <path d="M-80 10 L80 10 L58 50 Q0 64 -58 50Z" fill="#fff" stroke="#1E2A44" stroke-width="7" stroke-linejoin="round"/><path d="M-6 10 L-6 -100" stroke="#1E2A44" stroke-width="8" stroke-linecap="round"/>
+              <path d="M-2 -96 Q56 -66 50 0 L-2 0Z" fill="#fff" stroke="#1E2A44" stroke-width="7" stroke-linejoin="round"/><path d="M-12 -78 Q-58 -50 -52 0 L-12 0Z" fill="#fff" stroke="#1E2A44" stroke-width="7" stroke-linejoin="round"/>
+              <path d="M-6 -112 L-6 -98 L22 -105Z" fill="#F26B83" stroke="#1E2A44" stroke-width="5" stroke-linejoin="round"/></g></g>
+            <path d="M506 590 Q520 576 534 590 T562 590 T590 590 T618 590" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+            <path d="M522 612 Q536 598 550 612 T578 612 T606 612" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+            <g transform="translate(540 690) scale(.42)"><circle r="96" fill="#fff" stroke="#1E2A44" stroke-width="6"/><circle r="78" fill="none" stroke="#1E2A44" stroke-dasharray="6 10" stroke-width="5" stroke-linecap="round"/><path d="M0-70 L18 0 L0 70 L-18 0Z" fill="#F26B83" stroke="#1E2A44" stroke-width="6" stroke-linejoin="round"/><path d="M-70 0 L0 18 L70 0 L0-18Z" fill="#fff" stroke="#1E2A44" stroke-width="6" stroke-linejoin="round"/><circle r="11" fill="#1E2A44"/>
+              <text y="-112" text-anchor="middle" class="cmp">N</text><text y="146" text-anchor="middle" class="cmp">S</text><text x="134" y="14" text-anchor="middle" class="cmp">E</text><text x="-134" y="14" text-anchor="middle" class="cmp">W</text></g>
+          </g>
+          <g id="stamp" pointer-events="none"></g>
         </svg>
-        <div class="mapfoot">Maine (light blue) was part of Massachusetts back then. Vermont (gray, dashed) was not one of the 13 colonies. The dashed box shows the close-up map below.</div>
+        <div class="mapfoot">Maine (pale aqua) was part of Massachusetts back then. Vermont (gray, dashed) was not one of the 13 colonies. The dashed box shows the close-up map below.</div>
       </div>
       <div class="mapbox">
         <div class="zoomhead"><svg aria-hidden="true"><use href="#lens"/></svg>Close-up of the small colonies</div>
         <svg id="zoom" viewBox="0 0 620 504" role="img" aria-label="Close-up map of the small colonies">
+          <rect x="-50" y="-50" width="720" height="610" fill="url(#dots)" pointer-events="none"/>
           <g id="zland" class="landlayer"></g>
           <g id="zlabels"></g>
         </svg>
@@ -285,7 +303,7 @@ img{max-width:100%}
 
     <div class="colR">
       <div class="score" aria-live="polite">
-        <div class="scorehead"><b>Most points wins!</b>
+        <div class="scorehead"><b class="ribbon">Most points wins!</b>
           <span class="teamct" id="teamCt">Teams <button type="button" id="tMinus" aria-label="Fewer teams">−</button><b id="tCount">2</b><button type="button" id="tPlus" aria-label="More teams">+</button></span></div>
         <div class="winner" id="winner" hidden></div>
         <div class="teams" id="teamTiles"></div>
@@ -305,7 +323,7 @@ img{max-width:100%}
         </div>
         <div class="trayblock">
           <h2>Colonies</h2>
-          <p class="hint">Drag each one to the map.</p>
+          <p class="hint">Peel each sticker onto the map.</p>
           <div class="pieces" id="pieces"></div>
         </div>
         <div class="trayblock" id="yearCard">
@@ -353,15 +371,15 @@ const COLONIES = [
  {id:"MD",name:"Maryland",region:"south",year:1634,fact:"Settlers arrived in 1634. Maryland was started partly as a safe place for Catholics.",hint:"It started a few years after the Puritans came in 1630.",other:"Charter 1632"},
  {id:"CT",name:"Connecticut",region:"ne",year:1636,fact:"Thomas Hooker led people from Massachusetts to start Hartford in 1636.",hint:"It started the same year as Rhode Island.",other:"Fundamental Orders 1639; royal charter 1662"},
  {id:"RI",name:"Rhode Island",region:"ne",year:1636,fact:"Roger Williams was forced to leave Massachusetts. He started Providence in 1636.",hint:"It started the same year as Connecticut.",other:"Royal charter 1663"},
- {id:"DE",name:"Delaware",region:"mid",year:1638,fact:"People from Sweden started a colony here called New Sweden in 1638. Later the English took it over.",hint:"It started 2 years after Rhode Island and Connecticut.",other:"English from 1664; William Penn took control 1682"},
+ {id:"DE",name:"Delaware",region:"mid",year:1638,fact:"People from Sweden started New Sweden here in 1638. It was the first colony here that lasted. The Dutch took it in 1655, and the English in 1664.",hint:"It started 2 years after Rhode Island and Connecticut.",other:"English from 1664; William Penn took control 1682"},
  {id:"NC",name:"North Carolina",region:"south",year:1663,fact:"In 1663 the king gave the land called Carolina to eight men, called the Lords Proprietors.",hint:"It is the year the king gave away Carolina, one year before New York.",other:"Virginians settling the Albemarle by about 1660; separate colony 1712"},
- {id:"SC",name:"South Carolina",region:"south",year:1670,fact:"Settlers started the town of Charles Town in 1670. Today we call it Charleston.",hint:"Its town was started 7 years after the king gave away Carolina.",other:"Carolina charter 1663; separate colony 1712"},
+ {id:"SC",name:"South Carolina",region:"south",year:1670,fact:"Settlers started the town of Charles Town in 1670. About ten years later it moved a short way, to where Charleston is today.",hint:"Its town was started 7 years after the king gave away Carolina.",other:"Carolina charter 1663; separate colony 1712"},
  {id:"NY",name:"New York",region:"mid",year:1664,fact:"In 1664 the English took this land from the Dutch and named it New York.",hint:"It is the same year as New Jersey.",other:"Dutch New Netherland before 1664"},
  {id:"NJ",name:"New Jersey",region:"mid",year:1664,fact:"In 1664 the Duke of York gave this land to two of his friends.",hint:"It is the same year as New York.",other:"Royal colony 1702"},
  {id:"PA",name:"Pennsylvania",region:"mid",year:1681,fact:"In 1681 the king gave this land to William Penn, a Quaker.",hint:"It came 17 years after New York.",other:"Penn petitioned in 1680"},
  {id:"GA",name:"Georgia",region:"south",year:1732,fact:"Georgia began in 1732. It was the last of the 13 colonies.",hint:"It was the very last colony. Look for the biggest year!",other:"Savannah founded 1733"}
 ];
-const BONUS = {"VA": ["king", "business", "In 1606 King James I gave a charter to a company of investors.", "The company wanted to make money. It told the settlers to look for gold."], "MA": ["breakaway", "religious", "The Pilgrims were Separatists. They broke away from the Church of England. (Later, in 1629, the Puritans got a royal charter for Massachusetts Bay.)", "The Pilgrims wanted to worship in their own way."], "NH": ["king", "business", "John Mason got the land from the Council for New England, a group King James set up to give out land.", "The settlers came to start a fishing colony. They did not come because of religion."], "MD": ["king", "religious", "The king gave Lord Baltimore a charter for Maryland.", "Maryland was mainly a safe place for Catholics, who were treated badly in England."], "CT": ["breakaway", "religious", "Thomas Hooker's church group left Massachusetts. They wanted to get away from John Cotton, a powerful Boston minister.", "Their reason for leaving was about their church and its leaders."], "RI": ["breakaway", "religious", "Massachusetts leaders forced Roger Williams to leave because of what he said and believed. He started his own settlement.", "In Providence, people had complete religious freedom. It became a safe place for people treated badly for their faith."], "DE": ["country", "business", "Sweden got here first! A Swedish company started New Sweden in 1638. Later the English took it over.", "The company wanted to make money by sending beaver furs and tobacco back to Sweden."], "NC": ["king", "business", "In 1663 King Charles II gave Carolina to eight men. It was a reward for helping him become king.", "The eight men expected to make a lot of money from their new land."], "SC": ["king", "business", "South Carolina was part of the land King Charles II gave to eight men in 1663, as a reward for helping him become king.", "The eight men expected to make a lot of money. Most of them never did."], "NY": ["country", "business", "The Dutch got here first! Their colony was called New Netherland. In 1664 the English took it, and the king gave it to his brother, the Duke of York.", "New Netherland was started by a Dutch trading company to make money from trade."], "NJ": ["king", "business", "The king gave this land to his brother, the Duke of York. The Duke gave it to two friends.", "The two owners wanted settlers to buy land and pay them rent every year."], "PA": ["king", "religious", "In 1681 King Charles II gave William Penn a charter. The king owed money to Penn's family.", "Penn wanted a safe home for Quakers, who were treated badly in England."], "GA": ["king", "either", "In 1732 King George signed a charter for Georgia.", "Tricky one! Georgia was started to help poor people and to protect the other colonies from Spain. That is not mainly business or religion, so either answer earns the point. The leaders were not even allowed to be paid!"]};
+const BONUS = {"VA": ["king", "business", "In 1606 King James I gave a charter to a company of investors.", "The company wanted to make money. It told the settlers to look for valuable minerals and a water route to Asia."], "MA": ["breakaway", "religious", "The Pilgrims were Separatists. They broke away from the Church of England. (Later, in 1629, the Puritans got a royal charter for Massachusetts Bay.)", "The Pilgrims wanted to worship in their own way."], "NH": ["king", "business", "John Mason got the land from the Council for New England, a group King James set up to give out land.", "The settlers came to start a fishing colony. They did not come because of religion."], "MD": ["king", "religious", "The king gave Lord Baltimore a charter for Maryland.", "Lord Baltimore wanted a safe place for Catholics, who were treated badly in England."], "CT": ["breakaway", "religious", "Thomas Hooker's church group left Massachusetts. They wanted to get away from John Cotton, a powerful Boston minister.", "Thomas Hooker disagreed with Boston church leaders about who could join the church. His group also wanted better land for their cattle, but church was the main reason."], "RI": ["breakaway", "religious", "Massachusetts leaders forced Roger Williams to leave because of what he said and believed. He started his own settlement.", "In Providence, people had complete religious freedom. It became a safe place for people treated badly for their faith."], "DE": ["country", "business", "Other countries got here first! A Dutch trading post in 1631 did not last. Then a Swedish company started New Sweden in 1638. The Dutch took it in 1655, and the English took over in 1664.", "The Swedish company wanted to make money from trading furs and tobacco."], "NC": ["king", "business", "In 1663 King Charles II gave Carolina to eight men. It was a reward for helping him become king.", "The eight men expected to make a lot of money from their new land."], "SC": ["king", "business", "South Carolina was part of the land King Charles II gave to eight men in 1663, as a reward for helping him become king.", "The eight men expected to make a lot of money. Most of them never did."], "NY": ["country", "business", "The Dutch got here first! Their colony was called New Netherland. In 1664 the king gave this land to his brother, the Duke of York. Then English ships took it from the Dutch.", "New Netherland was started by a Dutch trading company to make money from trade."], "NJ": [["king", "country"], "business", "Both answers count! The Dutch and the Swedes settled here first. In 1664 the English took over, and the Duke of York, the king's brother, gave the land to two friends.", "The two owners wanted settlers to buy land and pay them rent every year."], "PA": ["king", "religious", "In 1681 King Charles II gave William Penn a charter. The king owed money to Penn's family.", "Penn wanted a safe home for Quakers, who were treated badly in England."], "GA": ["king", "either", "In 1732 King George signed a charter for Georgia.", "Tricky one! Georgia was started to help poor people and to protect the other colonies from Spain. That is not mainly business or religion, so either answer earns the point. The leaders were not even allowed to be paid!"]};
 const BYID = Object.fromEntries(COLONIES.map(c=>[c.id,c]));
 const REGION_NAME = {ne:"New England",mid:"Middle",south:"Southern"};
 const LABEL_POS = {MA:[440,238],RI:[512,288],CT:[430,282],DE:[392,402],NJ:[398,322],NH:[478,200],MD:[300,372],ME:[540,110]};
@@ -370,7 +388,9 @@ const NS="http://www.w3.org/2000/svg";
 const svg=document.getElementById('map'), landG=document.getElementById('land'), labelG=document.getElementById('labels');
 const fb=document.getElementById('feedback');
 
-const TEAM_COLORS=['#7b4fe0','#e2483d','#0e94a3','#d1408c','#9a6a2e','#3f5bd0'];
+const TEAM_COLORS=['#1B7F45','#2457D6','#8B5A2B','#3B3B3B','#C2410C','#7E22CE'];
+const TEAM_ICONS=['M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z','M13 2L4 14h6l-1 8 9-12h-6z','M12 21s-7.5-4.6-9.5-9.3C1.2 8.6 3 5 6.5 5c2 0 3.4 1.1 4.2 2.4h2.6C14.1 6.1 15.5 5 17.5 5 21 5 22.8 8.6 21.5 11.7 19.5 16.4 12 21 12 21z','M14 2a9 9 0 1 0 8 13A8 8 0 0 1 14 2z','M12 2l10 10-10 10L2 12z','M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z'];
+const ticon=i=>`<svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="${TEAM_ICONS[i]}" fill="currentColor"/></svg>`;
 let state={placed:{},years:{},mapMisses:0,yearMisses:0,stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:2,turn:0,owner:{},finished:false};
 const tname=i=>'Team '+(i+1);
 // Turns pass automatically, as in the paper rules. Clicking a team tile still overrides.
@@ -390,8 +410,8 @@ function renderTeams(){
   let th='',ch='';
   for(let i=0;i<state.teams;i++){
     const s=teamScore(i), on=i===state.turn, win=state.finished&&winners().list.includes(i);
-    th+=`<button type="button" class="tile${on?' on':''}${win?' win':''}" style="--tc:${TEAM_COLORS[i]}" data-team="${i}" aria-pressed="${on}"><span class="tn"><i></i>${tname(i)}${win?'<span class="badge" style="background:var(--coinedge)">Winner!</span>':on?'<span class="badge">Turn</span>':''}</span><span class="tp">${s}<small> point${s===1?'':'s'}</small></span><span class="tb">${teamParts(i)[0]} match${teamParts(i)[0]===1?'':'es'} + ${teamParts(i)[1]} bonus</span></button>`;
-    ch+=`<button type="button" class="tchip${on?' on':''}" style="--tc:${TEAM_COLORS[i]}" data-team="${i}" aria-pressed="${on}"><i></i>${tname(i)}</button>`;
+    th+=`<button type="button" class="tile${on?' on':''}${win?' win':''}" style="--tc:${TEAM_COLORS[i]}" data-team="${i}" aria-pressed="${on}"><span class="tn">${ticon(i)}${tname(i)}${win?'<span class="badge win">Winner!</span>':on?'<span class="badge">Your turn!</span>':''}</span><span class="tp">${s}<small> point${s===1?'':'s'}</small></span><span class="tb">${teamParts(i)[0]} match${teamParts(i)[0]===1?'':'es'} + ${teamParts(i)[1]} bonus</span></button>`;
+    ch+=`<button type="button" class="tchip${on?' on':''}" style="--tc:${TEAM_COLORS[i]}" data-team="${i}" aria-pressed="${on}">${ticon(i)}${tname(i)}</button>`;
   }
   tiles.innerHTML=th; chips.innerHTML=ch;
   if(lastScores && lastScores.length===scores.length){ scores.forEach((s,i)=>{ const d=s-lastScores[i]; if(d>0){ const tile=tiles.querySelector(`[data-team="${i}"]`); if(tile) tile.insertAdjacentHTML('beforeend',`<span class="pop">+${d}</span>`); } }); }
@@ -497,6 +517,12 @@ function say(kind,tag,html){fb.className='feedback '+kind;fb.innerHTML=`<div cla
 const CHEERS=['Great job!','You got it!','Nice work!','Awesome!','Way to go!','Super!'];
 const cheer=()=>CHEERS[Math.floor(Math.random()*CHEERS.length)];
 let lastPt=null;
+function stamp(id,text){
+  const g=document.getElementById('stamp'); if(!g) return;
+  const [x,y]=LABEL_POS[id]||[GEO[id].cx,GEO[id].cy];
+  g.innerHTML=`<g transform="translate(${x} ${y}) scale(.36)"><g class="stampg"><path d="M0-120 L26-84 L70-98 L72-52 L116-36 L86 0 L116 36 L72 52 L70 98 L26 84 L0 120 L-26 84 L-70 98 L-72 52 L-116 36 L-86 0 L-116-36 L-72-52 L-70-98 L-26-84Z" fill="#fff" stroke="#1E2A44" stroke-width="8"/><text y="16" text-anchor="middle" class="stamptxt">${text}</text></g></g>`;
+  clearTimeout(stamp.t); stamp.t=setTimeout(()=>{g.innerHTML='';},1300);
+}
 function burst(x,y){
   if(x==null) return;
   for(let i=0;i<9;i++){const a=Math.PI*2*i/9+Math.random()*.4, r=50+Math.random()*40;
@@ -520,7 +546,7 @@ function dropColony(id,target){
   if(target==='ME') target= id==='MA' ? 'MA' : 'ME';
   if(target===id){
     state.placed[id]=true; const st=!state.missMap[id]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
-    say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. Now find its year.`);
+    stamp(id,'Nice!'); say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. Now find its year.`);
     return true;
   }
   state.mapMisses++; state.missMap[id]=true;
@@ -545,7 +571,7 @@ function dropYear(year,target){
   if(+year===c.year){
     state.years[target]=true; if(!state.order.includes(target)) state.order.push(target); state.owner[target]=state.turn; const st=!state.missYear[target]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
     checkWinner(); renderTeams();
-    say('ok',`${cheer()} ${c.year}`,`<b>+1 point for ${tname(state.turn)}!</b> ${c.fact}`);
+    stamp(target,String(c.year)); say('ok',`${cheer()} ${c.year}`,`<b>+1 point for ${tname(state.turn)}!</b> ${c.fact}`);
     fb.insertAdjacentHTML('beforeend','<button type="button" class="jump" id="jumpBonus">Bonus questions for '+c.name+' are open ↓</button>');
     renderBonus();
     return true;
@@ -619,18 +645,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected){selected.
 
 const Q1OPTS=[['king','The king gave the land','A royal charter or grant from the king, or from someone the king gave land to'],['breakaway','A group broke away','People who disagreed with church or colony leaders left, or were forced out, and started their own'],['country','Another country started it first','People from another European country settled it before the English took over']];
 const Q2OPTS=[['business','Business','To make money: trade, farming, fishing, selling land'],['religious','Religious','To worship freely or protect a religious group']];
-function okAns(id,q,v){const k=BONUS[id];return q===1? v===k[0] : (k[1]==='either'||v===k[1]);}
+function okAns(id,q,v){const k=BONUS[id];return q===1? (Array.isArray(k[0])?k[0].includes(v):v===k[0]) : (k[1]==='either'||v===k[1]);}
+function isKey(id,q,val){const c=q===1?BONUS[id][0]:BONUS[id][1]; return Array.isArray(c)?c.includes(val):(c==='either'||val===c);}
 function bonusPoints(){let n=0;for(const id in state.bonus){const b=state.bonus[id];if(b.q1&&okAns(id,1,b.q1))n++;if(b.q2&&okAns(id,2,b.q2))n++;}return n;}
 function bonusCard(id){
   const c=BYID[id], key=BONUS[id], b=state.bonus[id]||{};
   const opts=(q,list)=>list.map(([val,label,desc])=>{
     const ans=q===1?b.q1:b.q2, correct=q===1?key[0]:key[1];
     let cls='bopt';
-    if(ans){ if(val===ans) cls+= okAns(id,q,ans)?' right':' wrong'; else if(val===correct) cls+=' right'; }
+    if(ans){ if(val===ans) cls+= okAns(id,q,ans)?' right':' wrong'; else if(isKey(id,q,val)) cls+=' right'; }
     return `<button type="button" class="${cls}" data-id="${id}" data-q="${q}" data-v="${val}" ${ans?'disabled':''}><b>${label}</b><span>${desc}</span></button>`;
   }).join('');
   const why=(q)=>{const ans=q===1?b.q1:b.q2; if(!ans) return '<p class="bpick">Click your team\'s answer.</p>'; const correct=q===1?key[0]:key[1]; const ok=okAns(id,q,ans);
-    const name = correct==='either' ? 'Either answer' : (q===1?Q1OPTS:Q2OPTS).find(o=>o[0]===correct)[1];
+    const name = correct==='either' ? 'Either answer' : Array.isArray(correct) ? correct.map((c,i)=>{const t=(q===1?Q1OPTS:Q2OPTS).find(o=>o[0]===c)[1];return i?t[0].toLowerCase()+t.slice(1):t;}).join(' or ') : (q===1?Q1OPTS:Q2OPTS).find(o=>o[0]===correct)[1];
     return `<p class="bwhy ${ok?'':'no'}"><b>${ok?'+1 bonus point for '+tname(state.owner[id]??0)+'!':'No point.'}</b> The answer: <b>${name}</b>. ${q===1?key[2]:key[3]}</p>`;};
   const fin=b.q1&&b.q2;
   const own=state.owner[id]??0; const got=(b.q1&&okAns(id,1,b.q1)?1:0)+(b.q2&&okAns(id,2,b.q2)?1:0);
