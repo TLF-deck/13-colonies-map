@@ -48,6 +48,7 @@ h1 .flag{color:var(--ne)}
 .sub{margin:6px 0 0;font-size:1.15rem;color:var(--muted);max-width:40ch}
 .how{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .how div{display:flex;align-items:center;gap:8px;background:var(--panel);border-radius:999px;padding:6px 14px 6px 6px;font-weight:700;font-size:1rem}
+.howrule{margin:8px 0 0;font-size:1rem;font-weight:700;color:var(--muted)}
 .how b{font-family:var(--display);background:var(--ink);color:var(--panel);border-radius:50%;width:30px;height:30px;display:grid;place-items:center;font-size:1.05rem}
 
 .score{background:var(--panel);border-radius:18px;padding:12px 16px;display:grid;gap:8px;min-width:250px}
@@ -255,7 +256,9 @@ img{max-width:100%}
       <div class="how">
         <div><b>1</b>Drag a colony onto the map</div>
         <div><b>2</b>Then drag its year onto it</div>
+        <div><b>3</b>Answer 2 bonus questions</div>
       </div>
+      <p class="howrule">A wrong spot ends your turn. After the bonus questions, the next team goes.</p>
     </div>
   </header>
 
@@ -370,6 +373,10 @@ const fb=document.getElementById('feedback');
 const TEAM_COLORS=['#7b4fe0','#e2483d','#0e94a3','#d1408c','#9a6a2e','#3f5bd0'];
 let state={placed:{},years:{},mapMisses:0,yearMisses:0,stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:2,turn:0,owner:{},finished:false};
 const tname=i=>'Team '+(i+1);
+// Turns pass automatically, as in the paper rules. Clicking a team tile still overrides.
+function nextTurn(){ state.turn=(state.turn+1)%state.teams; }
+function pendingYear(){ return Object.keys(state.placed).find(id=>!state.years[id]); }
+function pendingBonus(){ return state.order.find(id=>{const b=state.bonus[id];return !(b&&b.q1&&b.q2);}); }
 function teamParts(i){let m=0,bn=0;for(const id of state.order){if(state.owner[id]!==i)continue;m++;const b=state.bonus[id];if(b){if(b.q1&&okAns(id,1,b.q1))bn++;if(b.q2&&okAns(id,2,b.q2))bn++;}}return [m,bn];}
 function teamScore(i){let n=0;for(const id of state.order){if(state.owner[id]!==i)continue;n++;const b=state.bonus[id];if(b){if(b.q1&&okAns(id,1,b.q1))n++;if(b.q2&&okAns(id,2,b.q2))n++;}}return n;}
 function gameOver(){ if(state.order.length<13) return false; return state.order.every(id=>{const b=state.bonus[id];return b&&b.q1&&b.q2;}); }
@@ -508,10 +515,12 @@ function targetAt(x,y){
 function dropColony(id,target){
   const c=BYID[id];
   if(!target){return false;}
+  const py=pendingYear(); if(py){ say('info','Year first!',`Give <b>${BYID[py].name}</b> its year before you place another colony.`); return false; }
+  const pb=pendingBonus(); if(pb){ say('info','Bonus first!',`Answer the bonus questions for <b>${BYID[pb].name}</b> before the next colony.`); return false; }
   if(target==='ME') target= id==='MA' ? 'MA' : 'ME';
   if(target===id){
     state.placed[id]=true; const st=!state.missMap[id]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
-    say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies.Now find its year.`);
+    say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. Now find its year.`);
     return true;
   }
   state.mapMisses++; state.missMap[id]=true;
@@ -521,7 +530,8 @@ function dropColony(id,target){
   else if(target==='ME') msg='That land was part of Massachusetts back then.';
   else if(state.placed[target]) msg=`${BYID[target].name} is already there.`;
   else msg=`That spot is not ${c.name}.`;
-  say('no','Try again!',msg+' Try another spot.');
+  const was=tname(state.turn); nextTurn(); save(); renderTeams(); renderBonus();
+  say('no',`Not that spot. ${was}'s turn is over.`,msg+` <b>${tname(state.turn)}, you're up!</b>`);
   return false;
 }
 
@@ -654,6 +664,7 @@ document.getElementById('bonusBody').addEventListener('click',e=>{
   save();
   if(b.q1&&b.q2){ // keep the just-finished card in place until the next render triggered by gameplay
     const card=document.getElementById('bc-'+id); card.outerHTML=bonusCard(id);
+    if(state.order.length<13){ nextTurn(); save(); say('info',`${tname(state.turn)}'s turn`,`Bonus done for ${BYID[id].name}. <b>${tname(state.turn)}</b>, drag a colony to the map.`); }
     const bp=bonusPoints(); document.getElementById('bonusCount').textContent=bp; document.getElementById('cntBonus').textContent=bp+'/26'; document.getElementById('barBonus').style.width=(bp/26*100)+'%'; document.querySelectorAll('.bplabel').forEach(s=>s.textContent=bp===1?'bonus point':'bonus points');
   } else renderBonus();
   if(ok) burst(r.left+r.width/2,r.top+r.height/2);
