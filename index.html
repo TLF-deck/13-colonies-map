@@ -27,6 +27,8 @@ button{font-family:inherit;cursor:pointer}
 /* Header */
 header{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .hdr-l{display:flex;align-items:center;flex-wrap:wrap;gap:6px 16px}
+.hdr-l .topreset{margin-left:auto}
+@media (min-width:861px){.hdr-l{flex-wrap:nowrap}.hdr-l .sub{flex:1;min-width:0}.hdr-l .brand,.hdr-l .topreset{flex:none}}
 h1{font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,5.5vw,3rem);line-height:1;margin:0;text-shadow:3px 3px 0 var(--sea)}
 .sub{margin:0;font-size:1.15rem}
 .brand{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:2px solid var(--ink);border-radius:20px;padding:2px 10px;white-space:nowrap;background:#fff;color:var(--ink);text-decoration:none;transition:transform .1s}
@@ -282,10 +284,10 @@ img{max-width:100%}
 <div class="wrap">
   <header>
     <div class="titleblock">
-      <div class="hdr-l"><h1>Colony Mapping</h1><p class="sub">The 13 colonies fell off the map! Can you put them back?</p><a class="brand" href="https://www.languagefirm.org/">The Language Firm</a></div>
+      <div class="hdr-l"><h1>Colony Mapping</h1><p class="sub">The 13 colonies fell off the map! Can you put them back?</p><a class="brand" href="https://www.languagefirm.org/">The Language Firm</a><button class="ctl topreset" id="reset" type="button">Start over</button></div>
       <div class="how">
-        <div><b>1</b>Drag a colony onto the map</div>
-        <div><b>2</b>Then drag its year onto it</div>
+        <div><b>1</b>Click a colony, then click its spot on the map</div>
+        <div><b>2</b>Click its year, then click the colony</div>
         <div><b>3</b>Bonus questions (optional)</div>
       </div>
       <p class="howrule">Your turn is not over until your colony's year is on the map. Then answer the 2 bonus questions or skip them, and the next team goes. A wrong spot on the map ends your turn.</p>
@@ -323,7 +325,7 @@ img{max-width:100%}
             <g id="zlabels"></g>
           </svg>
         </div>
-        <div class="mapfoot">Maine (pale aqua) was part of Massachusetts back then. Vermont (gray, dashed) was not one of the 13 colonies. <b>Small colonies:</b> hold a piece over a small colony in the dashed box for a moment, or press <b>Zoom in</b>, and a close-up opens right on the map.</div>
+        <div class="mapfoot">Maine (pale aqua) was part of Massachusetts back then. Vermont (gray, dashed) was not one of the 13 colonies. <b>Small colonies:</b> click inside the dashed box or press <b>Zoom in</b>, and a close-up opens right on the map. Then click the colony there.</div>
       </div>
     </div>
     </div>
@@ -348,16 +350,16 @@ img{max-width:100%}
         <div class="stepline" id="stepLine"></div>
         <div class="feedback" id="feedback" aria-live="polite">
           <div class="tag">Let's start!</div>
-          <p>Pick up a colony and drop it where it belongs on the map.</p>
+          <p>Click a colony, then click where it belongs on the map.</p>
         </div>
         <div class="trayblock">
           <h2>Colonies</h2>
-          <p class="hint">Peel each sticker onto the map.</p>
+          <p class="hint">Click one, then click the map.</p>
           <div class="pieces" id="pieces"></div>
         </div>
         <div class="trayblock" id="yearCard">
           <h2>Years</h2>
-          <p class="hint" id="yearHint">Drop a year on a colony that's already on the map.</p>
+          <p class="hint" id="yearHint">Click a year, then click a colony that's already on the map.</p>
           <div class="pieces" id="years"></div>
         </div>
       </div>
@@ -367,7 +369,6 @@ img{max-width:100%}
         <span><i style="background:var(--south)"></i>Southern</span>
       </div>
       <div class="controls">
-        <button class="ctl" id="reset" type="button">Start over</button>
         <button type="button" class="ctl barrow" id="bonusArrow" hidden aria-label="Bonus questions are open. Go to bonus questions."><span id="bonusArrowText">Bonus questions are open</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5l7 7 7-7" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
@@ -385,7 +386,7 @@ img{max-width:100%}
       <h2 id="bonusTitle">Bonus Points</h2>
       <div class="bpts"><b id="bonusCount">0</b> <span class="bplabel">bonus points</span></div>
     </div>
-    <p class="bintro">Match a colony's year to open its bonus card. Answer 2 questions. Each right answer = 1 bonus point for the team that matched it, up to 2.</p>
+    <p class="bintro">Match a colony's year to open its bonus card. Answer the 2 questions or skip them. Each right answer = 1 bonus point for the team that matched it, up to 2.</p>
     <div id="bonusBody"></div>
       </section>
 </div>
@@ -431,10 +432,10 @@ function pendingBonus(){ return state.order.find(id=>!bDone(id)); }
 function stepInfo(){
   const who=`<b>${tname(state.turn)}</b>`;
   if(state.finished) return {n:0,html:'Game over! Scroll down to see all 13 colonies in order.'};
-  const py=pendingYear(); if(py) return {n:2,id:py,html:`<span class="sn">Step 2 of 3</span>${who}, drag the year onto <b>${BYID[py].name}</b>. <span class="must">Your turn is not over until the year is placed.</span>`};
+  const py=pendingYear(); if(py) return {n:2,id:py,html:`<span class="sn">Step 2 of 3</span>${who}, click the year for <b>${BYID[py].name}</b>, then click ${BYID[py].name} on the map. <span class="must">Your turn is not over until the year is placed.</span>`};
   const pb=pendingBonus(); if(pb) return {n:3,id:pb,html:`<span class="sn">Step 3 of 3</span>Bonus questions for <b>${BYID[pb].name}</b> are optional. Answer them below, or skip them to pass to the next team.`};
   if(state.order.length>=13) return {n:0,html:'All 13 colonies are matched!'};
-  return {n:1,html:`<span class="sn">Step 1 of 3</span>${who}, drag a colony onto the map.`};
+  return {n:1,html:`<span class="sn">Step 1 of 3</span>${who}, click a colony, then click where it goes on the map.`};
 }
 function skipBtn(id){ return `<button type="button" class="skipb" data-skip="${id}">Skip bonus questions: next team →</button>`; }
 function updateStep(){
@@ -549,7 +550,7 @@ function renderTray(){
   if(!any) yearsEl.innerHTML='<span class="empty">Every year is matched!</span>';
   const anyPlaced=Object.keys(state.placed).length>0;
   document.getElementById('yearCard').classList.toggle('locked',!anyPlaced);
-  document.getElementById('yearHint').textContent= anyPlaced ? 'Drop a year on a colony that\'s already on the map.' : 'Locked: put a colony on the map first.';
+  document.getElementById('yearHint').textContent= anyPlaced ? 'Click a year, then click a colony that\'s already on the map.' : 'Locked: put a colony on the map first.';
   const nm=Object.keys(state.placed).length, ny=Object.keys(state.years).length;
   document.getElementById('cntMap').textContent=nm+'/13';
   document.getElementById('cntYear').textContent=ny+'/13';
@@ -644,12 +645,12 @@ function ghostCenter(d){ if(!d||!d.ghost) return [null,null]; const r=d.ghost.ge
 function dropColony(id,target){
   const c=BYID[id];
   if(!target){return false;}
-  const py=pendingYear(); if(py){ say('info',`Year first! ${tname(state.turn)}'s turn is not over.`,`Drag the year onto <b>${BYID[py].name}</b> before anyone places another colony.`); return false; }
+  const py=pendingYear(); if(py){ say('info',`Year first! ${tname(state.turn)}'s turn is not over.`,`Click the year, then click <b>${BYID[py].name}</b>, before anyone places another colony.`); return false; }
   const pb=pendingBonus(); if(pb){ say('info','Bonus questions are still open',`Answer the bonus questions for <b>${BYID[pb].name}</b>, or skip them to pass to the next team.`); fb.insertAdjacentHTML('beforeend',skipBtn(pb)); return false; }
   if(target==='ME') target= id==='MA' ? 'MA' : 'ME';
   if(target===id){
     state.placed[id]=true; const st=!state.missMap[id]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
-    stamp(id,'Nice!'); say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. <b>Your turn is not over:</b> now drag its year onto ${c.name}.`);
+    stamp(id,'Nice!'); say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. <b>Your turn is not over:</b> now click its year, then click ${c.name}.`);
     return true;
   }
   state.mapMisses++; state.missMap[id]=true;
@@ -727,18 +728,24 @@ document.addEventListener('pointerup',e=>{
     if(selected===d.b){d.b.classList.remove('sel');selected=null;return;}
     if(selected)selected.classList.remove('sel');
     selected=d.b; d.b.classList.add('sel');
-    say('info','Picked up!',`Now tap the map where <b>${d.kind==='colony'?BYID[d.val].name:d.val}</b> goes.`);
+    say('info','Picked up!',`Now click the map where <b>${d.kind==='colony'?BYID[d.val].name:d.val}</b> goes.`);
     return;
   }
   const [gx,gy]=ghostCenter(d); d.ghost.remove();
   let t=resolveDrop(d.kind,d.val,e.clientX,e.clientY,gx,gy); lastPt=[e.clientX,e.clientY];
   // Dropped on the map but not on any colony (water, blank land): a colony counts as a wrong spot; a year gets a reminder.
-  if(!t && onMapArea(e.clientX,e.clientY)){ if(d.kind==='colony') t='OFF'; else say('info','Drop it on a colony',`Put <b>${d.val}</b> on a colony that's already on the map.`); }
+  if(!t && onMapArea(e.clientX,e.clientY)){ if(d.kind==='colony') t='OFF'; else say('info','Put it on a colony',`Put <b>${d.val}</b> on a colony that's already on the map.`); }
   const ok = d.kind==='colony' ? dropColony(d.val,t) : dropYear(d.val,t);
   if(!ok && document.body.contains(d.b)){d.b.style.visibility='';if(t){d.b.classList.add('shake');setTimeout(()=>d.b.classList.remove('shake'),400);}}
   selected=null; clearTimeout(dwellT); dwellT=null; ringEl.classList.remove('pulse'); if(lensAuto) setTimeout(closeLens,700);
 });
-svg.addEventListener('click',e=>{ if(lensEl.hidden && inRing(e.clientX,e.clientY)){ e.stopImmediatePropagation(); openLens(!!selected); } },true);
+svg.addEventListener('click',e=>{
+  if(!lensEl.hidden || !inRing(e.clientX,e.clientY)) return;
+  // A click on a big colony inside the box (Massachusetts, New York, Pennsylvania...) places the piece there; only the tiny colonies or water open the close-up.
+  const under=targetsAt(e.clientX,e.clientY), tiny=['CT','RI','NJ','DE','MD'];
+  if(under.length && !under.some(t=>tiny.includes(t))) return;
+  e.stopImmediatePropagation(); openLens(!!selected);
+},true);
 document.querySelectorAll('#map,#zoom').forEach(s=>s.addEventListener('click',e=>{
   if(!selected) return;
   let t=resolveDrop(selected.dataset.kind,selected.dataset.val,e.clientX,e.clientY,null,null);
@@ -791,10 +798,11 @@ function renderBonus(){
   renderTeams();
   if(!state.order.length){ body.innerHTML='<div class="bwait">Locked. Match a colony\'s year to unlock its bonus questions.</div>'; return; }
   const isFin=bDone;
-  const open=state.order.filter(id=>!isFin(id)).reverse();
-  const done=state.order.filter(isFin).reverse();
+  // One card at a time: the open card, or (between turns) the card just finished so its answers stay readable.
+  const open=state.order.filter(id=>!isFin(id));
+  const show=open.length?open[0]:state.order[state.order.length-1];
   setTimeout(updateArrow,0);
-  body.innerHTML = open.map(bonusCard).join('') + (done.length?'<div class="bdonehead">Finished</div>'+done.map(bonusCard).join(''):'');
+  body.innerHTML = bonusCard(show);
 }
 document.getElementById('bonusBody').addEventListener('click',e=>{
   const o=e.target.closest('.bopt'); if(!o||o.disabled) return;
@@ -805,7 +813,7 @@ document.getElementById('bonusBody').addEventListener('click',e=>{
   save();
   if(b.q1&&b.q2){ // keep the just-finished card in place until the next render triggered by gameplay
     const card=document.getElementById('bc-'+id); card.outerHTML=bonusCard(id);
-    if(state.order.length<13){ nextTurn(); save(); say('info',`${tname(state.turn)}'s turn`,`Bonus done for ${BYID[id].name}. <b>${tname(state.turn)}</b>, drag a colony to the map.`); }
+    if(state.order.length<13){ nextTurn(); save(); say('info',`${tname(state.turn)}'s turn`,`Bonus done for ${BYID[id].name}. <b>${tname(state.turn)}</b>, click a colony, then click where it goes on the map.`); }
     const bp=bonusPoints(); document.getElementById('bonusCount').textContent=bp; document.getElementById('cntBonus').textContent=bp+'/26'; document.getElementById('barBonus').style.width=(bp/26*100)+'%'; document.querySelectorAll('.bplabel').forEach(s=>s.textContent=bp===1?'bonus point':'bonus points');
   } else renderBonus();
   if(ok) burst(r.left+r.width/2,r.top+r.height/2);
@@ -819,7 +827,7 @@ document.addEventListener('click',e=>{
   const b=state.bonus[id]||(state.bonus[id]={}); b.skipped=true;
   if(state.order.length<13) nextTurn();
   save(); renderBonus(); checkWinner(); renderTeams(); updateArrow();
-  if(state.order.length<13) say('info',`${tname(state.turn)}'s turn`,`Bonus questions for ${BYID[id].name} were skipped. <b>${tname(state.turn)}</b>, drag a colony onto the map.`);
+  if(state.order.length<13) say('info',`${tname(state.turn)}'s turn`,`Bonus questions for ${BYID[id].name} were skipped. <b>${tname(state.turn)}</b>, click a colony, then click where it goes on the map.`);
   else { say('info','Bonus skipped',`Bonus questions for ${BYID[id].name} were skipped.`); showDone(); }
 });
 const arrowEl=document.getElementById('bonusArrow');
@@ -864,7 +872,7 @@ document.getElementById('reset').addEventListener('click',()=>{
   const keepTeams=state.teams;
   state={placed:{},years:{},mapMisses:0,yearMisses:0,stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:keepTeams,turn:0,owner:{},finished:false};save();
   pieceOrder=shuffle(COLONIES.map(c=>c.id)); yearOrder=shuffle(COLONIES.map(c=>c.year));
-  paint();renderTray();renderBonus();renderTeams();say('info',"Let's start!",'Pick up a colony and drop it where it belongs on the map.');
+  paint();renderTray();renderBonus();renderTeams();say('info',"Let's start!",'Click a colony, then click where it belongs on the map.');
 });
 
 
