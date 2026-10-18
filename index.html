@@ -287,10 +287,10 @@ img{max-width:100%}
       <div class="hdr-l"><h1>Colony Mapping</h1><p class="sub">The 13 colonies fell off the map! Can you put them back?</p><a class="brand" href="https://www.languagefirm.org/">The Language Firm</a><button class="ctl topreset" id="reset" type="button">Start over</button></div>
       <div class="how">
         <div><b>1</b>Click a colony, then click its spot on the map</div>
-        <div><b>2</b>Click its year, then click the colony</div>
+        <div><b>2</b>Click its year</div>
         <div><b>3</b>Bonus questions (optional)</div>
       </div>
-      <p class="howrule">Your turn is not over until your colony's year is on the map. Then answer the 2 bonus questions or skip them, and the next team goes. A wrong spot on the map ends your turn.</p>
+      <p class="howrule">You aren't awarded a full point until your year is correctly chosen. Your turn ends after you skip or answer the bonus questions. A wrong spot on the map also ends your turn.</p>
     </div>
   </header>
 
@@ -359,7 +359,7 @@ img{max-width:100%}
         </div>
         <div class="trayblock" id="yearCard">
           <h2>Years</h2>
-          <p class="hint" id="yearHint">Click a year, then click a colony that's already on the map.</p>
+          <p class="hint" id="yearHint">Click the year for the colony you just placed.</p>
           <div class="pieces" id="years"></div>
         </div>
       </div>
@@ -432,7 +432,7 @@ function pendingBonus(){ return state.order.find(id=>!bDone(id)); }
 function stepInfo(){
   const who=`<b>${tname(state.turn)}</b>`;
   if(state.finished) return {n:0,html:'Game over! Scroll down to see all 13 colonies in order.'};
-  const py=pendingYear(); if(py) return {n:2,id:py,html:`<span class="sn">Step 2 of 3</span>${who}, click the year for <b>${BYID[py].name}</b>, then click ${BYID[py].name} on the map. <span class="must">Your turn is not over until the year is placed.</span>`};
+  const py=pendingYear(); if(py) return {n:2,id:py,html:`<span class="sn">Step 2 of 3</span>${who}, click the year for <b>${BYID[py].name}</b>. <span class="must">You aren't awarded a full point until your year is correctly chosen.</span>`};
   const pb=pendingBonus(); if(pb) return {n:3,id:pb,html:`<span class="sn">Step 3 of 3</span>Bonus questions for <b>${BYID[pb].name}</b> are optional. Answer them below, or skip them to pass to the next team.`};
   if(state.order.length>=13) return {n:0,html:'All 13 colonies are matched!'};
   return {n:1,html:`<span class="sn">Step 1 of 3</span>${who}, click a colony, then click where it goes on the map.`};
@@ -550,7 +550,7 @@ function renderTray(){
   if(!any) yearsEl.innerHTML='<span class="empty">Every year is matched!</span>';
   const anyPlaced=Object.keys(state.placed).length>0;
   document.getElementById('yearCard').classList.toggle('locked',!anyPlaced);
-  document.getElementById('yearHint').textContent= anyPlaced ? 'Click a year, then click a colony that\'s already on the map.' : 'Locked: put a colony on the map first.';
+  document.getElementById('yearHint').textContent= anyPlaced ? 'Click the year for the colony you just placed.' : 'Locked: put a colony on the map first.';
   const nm=Object.keys(state.placed).length, ny=Object.keys(state.years).length;
   document.getElementById('cntMap').textContent=nm+'/13';
   document.getElementById('cntYear').textContent=ny+'/13';
@@ -645,12 +645,12 @@ function ghostCenter(d){ if(!d||!d.ghost) return [null,null]; const r=d.ghost.ge
 function dropColony(id,target){
   const c=BYID[id];
   if(!target){return false;}
-  const py=pendingYear(); if(py){ say('info',`Year first! ${tname(state.turn)}'s turn is not over.`,`Click the year, then click <b>${BYID[py].name}</b>, before anyone places another colony.`); return false; }
+  const py=pendingYear(); if(py){ say('info',`Year first! ${tname(state.turn)}'s turn is not over.`,`Click the year for <b>${BYID[py].name}</b> before anyone places another colony.`); return false; }
   const pb=pendingBonus(); if(pb){ say('info','Bonus questions are still open',`Answer the bonus questions for <b>${BYID[pb].name}</b>, or skip them to pass to the next team.`); fb.insertAdjacentHTML('beforeend',skipBtn(pb)); return false; }
   if(target==='ME') target= id==='MA' ? 'MA' : 'ME';
   if(target===id){
     state.placed[id]=true; const st=!state.missMap[id]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
-    stamp(id,'Nice!'); say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. <b>Your turn is not over:</b> now click its year, then click ${c.name}.`);
+    stamp(id,'Nice!'); say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. <b>Your turn is not over:</b> now click its year.`);
     return true;
   }
   state.mapMisses++; state.missMap[id]=true;
@@ -706,7 +706,7 @@ function setHover(t,kind){
 }
 document.addEventListener('pointerdown',e=>{
   const b=e.target.closest('.piece,.yearchip'); if(!b) return;
-  if(b.dataset.kind==='year' && !Object.keys(state.placed).length){say('info','Map first!','Put a colony on the map. Then the years will unlock.');b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),400);return;}
+  if(b.dataset.kind==='year' && !Object.keys(state.placed).length){say('info','Colony first!','Click a colony, then click its spot on the map. Then click its year.');b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),400);return;}
   e.preventDefault();
   const r=b.getBoundingClientRect();
   drag={b,kind:b.dataset.kind,val:b.dataset.val,dx:e.clientX-r.left,dy:e.clientY-r.top,sx:e.clientX,sy:e.clientY,moved:false,ghost:null};
@@ -725,6 +725,16 @@ document.addEventListener('pointerup',e=>{
   if(!drag) return;
   const d=drag; drag=null; clearHover(); if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
   if(!d.moved){ // tap select
+    // A year needs no second click: it goes straight to the colony that is waiting for its year.
+    if(d.kind==='year'){
+      if(selected){selected.classList.remove('sel');selected=null;}
+      const py=pendingYear();
+      if(!py){ say('info','Colony first!','Click a colony, then click its spot on the map. Then click its year.'); d.b.classList.add('shake');setTimeout(()=>d.b.classList.remove('shake'),400); return; }
+      const r=d.b.getBoundingClientRect(); lastPt=[r.left+r.width/2,r.top+r.height/2];
+      const ok=dropYear(d.val,py);
+      if(!ok&&document.body.contains(d.b)){d.b.classList.add('shake');setTimeout(()=>d.b.classList.remove('shake'),400);}
+      return;
+    }
     if(selected===d.b){d.b.classList.remove('sel');selected=null;return;}
     if(selected)selected.classList.remove('sel');
     selected=d.b; d.b.classList.add('sel');
