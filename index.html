@@ -540,6 +540,33 @@ function targetAt(x,y){
   for(const e of els){ if(e.dataset&&e.dataset.target) return e.dataset.target; }
   return null;
 }
+// Every colony under a point (not only the top one), so a drop on a shared border counts for both colonies.
+function targetsAt(x,y){
+  const out=[]; for(const e of document.elementsFromPoint(x,y)){ const t=e.dataset&&e.dataset.target; if(t&&!out.includes(t)) out.push(t); } return out;
+}
+// Where did the piece land? Check the finger/pointer, the middle of the dragged sticker, and a small ring around the pointer.
+// If the right colony is under any of them, the drop counts; this stops near-misses on borders and thin coasts from being marked wrong.
+// Otherwise the colony under the pointer decides, so a truly wrong spot is still wrong.
+function resolveDrop(kind,val,x,y,gx,gy){
+  const pts=[[x,y]]; if(gx!=null) pts.push([gx,gy]);
+  // A tight ring (4 px) forgives drops right on a border line. A wider ring (10 px) only applies when the pointer
+  // is off every colony, such as just off a thin coast, so it never turns a drop inside a neighbor into a match.
+  const r = targetsAt(x,y).length ? 4 : 10;
+  for(let a=0;a<8;a++){ pts.push([x+r*Math.cos(a*Math.PI/4), y+r*Math.sin(a*Math.PI/4)]); }
+  const seen=pts.map(([px,py])=>targetsAt(px,py));
+  const all=[].concat(...seen);
+  if(kind==='colony'){
+    const want = val==='MA' ? ['MA','ME'] : [val];
+    if(all.some(t=>want.includes(t))) return val;
+  } else {
+    const fits=all.map(t=>t==='ME'?'MA':t).filter(t=>BYID[t]&&state.placed[t]&&!state.years[t]&&BYID[t].year===+val);
+    if(fits.length) return fits[0];
+    const open=all.map(t=>t==='ME'?'MA':t).filter(t=>BYID[t]&&state.placed[t]&&!state.years[t]);
+    if(seen[0].length===0 && open.length) return open[0];
+  }
+  return seen[0][0] || (seen[1]&&seen[1][0]) || null;
+}
+function ghostCenter(d){ if(!d||!d.ghost) return [null,null]; const r=d.ghost.getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2]; }
 
 function dropColony(id,target){
   const c=BYID[id];
@@ -591,7 +618,7 @@ function autoScroll(){
   if(!drag||!drag.moved){clearInterval(autoTimer);autoTimer=null;return;}
   const h=window.innerHeight, edge=70, y=drag.lastY;
   let dy=0; if(y<edge) dy=-Math.ceil((edge-y)/5); else if(y>h-edge) dy=Math.ceil((y-(h-edge))/5);
-  if(dy){window.scrollBy(0,dy); setHover(targetAt(drag.lastX,drag.lastY),drag.kind);}
+  if(dy){window.scrollBy(0,dy); const [gx,gy]=ghostCenter(drag); setHover(resolveDrop(drag.kind,drag.val,drag.lastX,drag.lastY,gx,gy),drag.kind);}
 }
 function clearHover(){document.querySelectorAll('.landlayer .hover').forEach(n=>n.classList.remove('hover'));}
 function setHover(t,kind){
@@ -614,7 +641,7 @@ document.addEventListener('pointermove',e=>{
   if(!drag.moved && Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6) return;
   if(!drag.moved){drag.moved=true;const g=drag.b.cloneNode(true);g.removeAttribute('id');g.classList.add('dragging');g.classList.remove('sel');document.body.appendChild(g);drag.ghost=g;drag.b.style.visibility='hidden';}
   drag.ghost.style.left=(e.clientX-drag.dx)+'px';drag.ghost.style.top=(e.clientY-drag.dy)+'px';
-  setHover(targetAt(e.clientX,e.clientY),drag.kind);
+  const [gx,gy]=ghostCenter(drag); setHover(resolveDrop(drag.kind,drag.val,e.clientX,e.clientY,gx,gy),drag.kind);
   drag.lastY=e.clientY; drag.lastX=e.clientX;
   if(!autoTimer) autoTimer=setInterval(autoScroll,16);
 });
@@ -628,21 +655,23 @@ document.addEventListener('pointerup',e=>{
     say('info','Picked up!',`Now tap the map where <b>${d.kind==='colony'?BYID[d.val].name:d.val}</b> goes.`);
     return;
   }
-  d.ghost.remove();
-  const t=targetAt(e.clientX,e.clientY); lastPt=[e.clientX,e.clientY];
+  const [gx,gy]=ghostCenter(d); d.ghost.remove();
+  const t=resolveDrop(d.kind,d.val,e.clientX,e.clientY,gx,gy); lastPt=[e.clientX,e.clientY];
   const ok = d.kind==='colony' ? dropColony(d.val,t) : dropYear(d.val,t);
   if(!ok && document.body.contains(d.b)){d.b.style.visibility='';if(t){d.b.classList.add('shake');setTimeout(()=>d.b.classList.remove('shake'),400);}}
   selected=null;
 });
 document.querySelectorAll('#map,#zoom').forEach(s=>s.addEventListener('click',e=>{
   if(!selected) return;
-  const t=targetAt(e.clientX,e.clientY); if(!t) return;
+  const t=resolveDrop(selected.dataset.kind,selected.dataset.val,e.clientX,e.clientY,null,null); if(!t) return;
   const s=selected; selected=null; s.classList.remove('sel'); lastPt=[e.clientX,e.clientY];
   const ok = s.dataset.kind==='colony' ? dropColony(s.dataset.val,t) : dropYear(s.dataset.val,t);
   if(!ok&&document.body.contains(s)){s.classList.add('shake');setTimeout(()=>s.classList.remove('shake'),400);}
 }));
 // tap mode hover preview with a mouse
-document.querySelectorAll('#map,#zoom').forEach(s=>s.addEventListener('pointermove',e=>{ if(selected&&!drag) setHover(targetAt(e.clientX,e.clientY),selected.dataset.kind); }));
+document.querySelectorAll('#map,#zoom').forEach(s=>s.addEventListener('pointermove',e=>{ if(selected&&!drag) setHover(resolveDrop(selected.dataset.kind,selected.dataset.val,e.clientX,e.clientY,null,null),selected.dataset.kind); }));
+// If the browser cancels a drag (a phone or tablet starts scrolling, a call comes in), put the piece back instead of leaving it stuck.
+document.addEventListener('pointercancel',()=>{ if(!drag) return; const d=drag; drag=null; clearHover(); if(autoTimer){clearInterval(autoTimer);autoTimer=null;} if(d.ghost) d.ghost.remove(); if(document.body.contains(d.b)) d.b.style.visibility=''; });
 document.addEventListener('click',e=>{ if(e.target.id==='jumpBonus'){ (document.getElementById('bc-'+state.order[state.order.length-1])||document.getElementById('bonus')).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); } });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected){selected.classList.remove('sel');selected=null;}});
 
