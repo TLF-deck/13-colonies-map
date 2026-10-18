@@ -134,6 +134,8 @@ path.colony[data-target="ME"].ne{fill:var(--ne)}
 .stepline{border:3px solid var(--turn,var(--ink));border-radius:14px;padding:8px 12px;background:#fff;display:grid;gap:6px;font-size:1.02rem;font-weight:700;line-height:1.3}
 .stepline .sn{font-family:var(--display);font-weight:700;font-size:.95rem;display:inline-block;background:var(--turn,var(--ink));color:#fff;border-radius:20px;padding:1px 10px;margin-right:6px}
 .stepline .must{color:var(--bad);font-weight:900}
+.steprow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.steprow .jump{margin-top:0}
+.stepline.nudge{animation:wobble .45s ease-in-out}
 .skipb{font:inherit;font-weight:800;justify-self:start;border:3px dashed var(--ink);color:var(--ink);background:#fff;border-radius:30px;padding:4px 16px;min-height:44px;cursor:pointer}
 .skipb:hover{background:var(--soft)}
 #yearCard.needyear{outline:5px solid var(--turn,var(--ink));outline-offset:4px;border-radius:16px;animation:needyear 1.4s ease-in-out infinite}
@@ -259,7 +261,6 @@ button.ctl.barrow{flex:1;min-width:0;display:flex;align-items:center;justify-con
   .turnhint{font-size:.8rem;margin:-4px 0 0}
   .stepline{padding:5px 9px;font-size:.88rem;gap:4px;border-width:2px}.stepline .sn{font-size:.78rem}
   .skipb{min-height:38px;padding:2px 12px;font-size:.9rem}
-  .dock .feedback .skipb{display:none}
   .dock{display:flex;flex-direction:column}.dock>*{flex:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.burst{display:none}}
@@ -433,14 +434,15 @@ function stepInfo(){
   const who=`<b>${tname(state.turn)}</b>`;
   if(state.finished) return {n:0,html:'Game over! Scroll down to see all 13 colonies in order.'};
   const py=pendingYear(); if(py) return {n:2,id:py,html:`<span class="sn">Step 2 of 3</span>${who}, click the year for <b>${BYID[py].name}</b>. <span class="must">You aren't awarded a full point until your year is correctly chosen.</span>`};
-  const pb=pendingBonus(); if(pb) return {n:3,id:pb,html:`<span class="sn">Step 3 of 3</span>Bonus questions for <b>${BYID[pb].name}</b> are optional. Answer them below, or skip them to pass to the next team.`};
+  const pb=pendingBonus(); if(pb) return {n:3,id:pb,html:`<span class="sn">Step 3 of 3</span>Bonus questions for <b>${BYID[pb].name}</b> are optional. Answer them below, or skip them to pass to the next team. The next colony waits until then.`};
   if(state.order.length>=13) return {n:0,html:'All 13 colonies are matched!'};
   return {n:1,html:`<span class="sn">Step 1 of 3</span>${who}, click a colony, then click where it goes on the map.`};
 }
 function skipBtn(id){ return `<button type="button" class="skipb" data-skip="${id}">Skip bonus questions: next team →</button>`; }
+function nudgeStep(){ const el=document.getElementById('stepLine'); el.classList.remove('nudge'); void el.offsetWidth; el.classList.add('nudge'); el.scrollIntoView({block:'nearest'}); }
 function updateStep(){
   const el=document.getElementById('stepLine'); if(!el) return; const s=stepInfo();
-  el.innerHTML=`<div>${s.html}</div>`+(s.n===3?skipBtn(s.id):'');
+  el.innerHTML=`<div>${s.html}</div>`+(s.n===3?`<div class="steprow"><button type="button" class="jump" id="jumpBonus">Go to the questions ↓</button>${skipBtn(s.id)}</div>`:'');
   document.getElementById('yearCard').classList.toggle('needyear',s.n===2);
 }
 function teamParts(i){let m=0,bn=0;for(const id of state.order){if(state.owner[id]!==i)continue;m++;const b=state.bonus[id];if(b){if(b.q1&&okAns(id,1,b.q1))bn++;if(b.q2&&okAns(id,2,b.q2))bn++;}}return [m,bn];}
@@ -585,7 +587,9 @@ function targetAt(x,y){
   return null;
 }
 // Every colony under a point (not only the top one), so a drop on a shared border counts for both colonies.
+let mapOnly=false; // true: ignore the close-up and read only the big map under the pointer
 function targetsAt(x,y){
+  if(mapOnly){ const out=[]; for(const e of document.elementsFromPoint(x,y)){ const t=e.dataset&&e.dataset.target; if(!t||lensEl.contains(e)) continue; if(!out.includes(t)) out.push(t); } return out; }
   // When the close-up is open, a point on the close-up only counts colonies drawn in the close-up,
   // and a point beside it only counts the big map underneath.
   const open=!lensEl.hidden, inLens=open&&inRect(lensEl.getBoundingClientRect(),x,y);
@@ -595,9 +599,9 @@ function targetsAt(x,y){
 function inRect(r,x,y){ return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom; }
 // ---- Close-up lens: opens on top of the big map, so the small colonies can be reached without scrolling ----
 const lensEl=document.getElementById('closeup'), zoomBtn=document.getElementById('zoomBtn');
-let lensAuto=false, dwellT=null, leaveT=null;
-function openLens(auto){ if(!lensEl.hidden) return; lensAuto=auto; lensEl.hidden=false; lensEl.classList.toggle('drop',!!auto); zoomBtn.hidden=true; ringEl.classList.remove('pulse'); }
-function closeLens(){ clearTimeout(dwellT); clearTimeout(leaveT); dwellT=leaveT=null; lensEl.hidden=true; lensAuto=false; zoomBtn.hidden=false; ringEl.classList.remove('pulse'); clearHover(); }
+let lensAuto=false, dwellT=null, leaveT=null, lensOpenAt=null;
+function openLens(auto){ if(!lensEl.hidden) return; lensAuto=auto; lensOpenAt = (auto&&drag&&drag.moved) ? [drag.lastX,drag.lastY] : null; lensEl.hidden=false; lensEl.classList.toggle('drop',!!auto); zoomBtn.hidden=true; ringEl.classList.remove('pulse'); }
+function closeLens(){ lensOpenAt=null; clearTimeout(dwellT); clearTimeout(leaveT); dwellT=leaveT=null; lensEl.hidden=true; lensAuto=false; zoomBtn.hidden=false; ringEl.classList.remove('pulse'); clearHover(); }
 function inRing(x,y){ const m=ringEl.getScreenCTM(); if(!m) return false; const pt=svg.createSVGPoint(); pt.x=x; pt.y=y; return ringEl.isPointInFill(pt.matrixTransform(m.inverse())) && inRect(svg.getBoundingClientRect(),x,y); }
 // While a piece is being moved: rest on the dashed box for a moment to open the close-up; move off it onto the big map to close it again.
 function lensTrack(x,y){
@@ -646,7 +650,7 @@ function dropColony(id,target){
   const c=BYID[id];
   if(!target){return false;}
   const py=pendingYear(); if(py){ say('info',`Year first! ${tname(state.turn)}'s turn is not over.`,`Click the year for <b>${BYID[py].name}</b> before anyone places another colony.`); return false; }
-  const pb=pendingBonus(); if(pb){ say('info','Bonus questions are still open',`Answer the bonus questions for <b>${BYID[pb].name}</b>, or skip them to pass to the next team.`); fb.insertAdjacentHTML('beforeend',skipBtn(pb)); return false; }
+  const pb=pendingBonus(); if(pb){ nudgeStep(); return false; }
   if(target==='ME') target= id==='MA' ? 'MA' : 'ME';
   if(target===id){
     state.placed[id]=true; const st=!state.missMap[id]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
@@ -677,7 +681,6 @@ function dropYear(year,target){
     state.years[target]=true; if(!state.order.includes(target)) state.order.push(target); state.owner[target]=state.turn; const st=!state.missYear[target]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
     checkWinner(); renderTeams();
     stamp(target,String(c.year)); say('ok',`${cheer()} ${c.year}`,`<b>+1 point for ${tname(state.turn)}!</b> ${c.fact}`);
-    fb.insertAdjacentHTML('beforeend','<button type="button" class="jump" id="jumpBonus">Bonus questions for '+c.name+' (optional) ↓</button>'+skipBtn(target));
     renderBonus();
     return true;
   }
@@ -742,7 +745,12 @@ document.addEventListener('pointerup',e=>{
     return;
   }
   const [gx,gy]=ghostCenter(d); d.ghost.remove();
-  let t=resolveDrop(d.kind,d.val,e.clientX,e.clientY,gx,gy); lastPt=[e.clientX,e.clientY];
+  let t;
+  if(!lensEl.hidden && lensOpenAt && Math.hypot(e.clientX-lensOpenAt[0],e.clientY-lensOpenAt[1])<16){
+    // The close-up opened right under a pointer that never moved on: judge the drop by the big map the student aimed at.
+    mapOnly=true; try{ t=resolveDrop(d.kind,d.val,e.clientX,e.clientY,null,null); } finally{ mapOnly=false; }
+  } else t=resolveDrop(d.kind,d.val,e.clientX,e.clientY,gx,gy);
+  lastPt=[e.clientX,e.clientY];
   // Dropped on the map but not on any colony (water, blank land): a colony counts as a wrong spot; a year gets a reminder.
   if(!t && onMapArea(e.clientX,e.clientY)){ if(d.kind==='colony') t='OFF'; else say('info','Put it on a colony',`Put <b>${d.val}</b> on a colony that's already on the map.`); }
   const ok = d.kind==='colony' ? dropColony(d.val,t) : dropYear(d.val,t);
@@ -754,6 +762,7 @@ svg.addEventListener('click',e=>{
   // A click on a big colony inside the box (Massachusetts, New York, Pennsylvania...) places the piece there; only the tiny colonies or water open the close-up.
   const under=targetsAt(e.clientX,e.clientY), tiny=['CT','RI','NJ','DE','MD'];
   if(under.length && !under.some(t=>tiny.includes(t))) return;
+  if(selected && selected.dataset.kind==='colony' && resolveDrop('colony',selected.dataset.val,e.clientX,e.clientY,null,null)===selected.dataset.val) return;
   e.stopImmediatePropagation(); openLens(!!selected);
 },true);
 document.querySelectorAll('#map,#zoom').forEach(s=>s.addEventListener('click',e=>{
