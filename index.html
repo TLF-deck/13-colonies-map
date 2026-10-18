@@ -886,8 +886,10 @@ function showDone(){
   });
 }
 
-function save(){try{localStorage.setItem('colonyMappingTeams',JSON.stringify(state));}catch(e){}}
-function load(){try{const s=JSON.parse(localStorage.getItem('colonyMappingTeams')||'null');if(s&&s.placed)state=Object.assign({stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:2,turn:0,owner:{},finished:false},s);}catch(e){}}
+// Each browser tab keeps its own game (sessionStorage): a reload resumes it, but another tab, window or computer never sees it.
+try{localStorage.removeItem('colonyMappingTeams');}catch(e){} // clear the old shared save from earlier versions
+function save(){try{sessionStorage.setItem('colonyMappingTeams',JSON.stringify(state));}catch(e){}}
+function load(){try{const s=JSON.parse(sessionStorage.getItem('colonyMappingTeams')||'null');if(s&&s.placed)state=Object.assign({stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:2,turn:0,owner:{},finished:false},s);}catch(e){}}
 
 document.getElementById('reset').addEventListener('click',()=>{
   const keepTeams=state.teams;
