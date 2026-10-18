@@ -104,8 +104,19 @@ path.colony[data-target="ME"].ne{fill:var(--ne)}
 .cmp{font-family:var(--display);font-weight:700;font-size:40px;fill:var(--ink)}
 .note{font-family:var(--body);font-weight:800;font-size:12px;fill:var(--ink);pointer-events:none}
 .mapfoot{font-size:1rem;line-height:1.4;font-weight:600;padding:10px 16px 12px;background:#fff;border-top:3px solid var(--ink)}
-.zoomhead{font-family:var(--display);font-weight:700;font-size:1.4rem;padding:10px 16px;background:#fff;border-bottom:3px solid var(--ink);display:flex;gap:10px;align-items:center}
-.zoomhead svg{width:24px;height:24px;flex:none}
+.mapbox{position:relative}
+.zoombtn{position:absolute;top:10px;left:10px;z-index:4;display:flex;align-items:center;gap:7px;font:inherit;font-weight:800;font-size:.95rem;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:30px;padding:5px 14px 5px 10px;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.zoombtn svg{width:20px!important;height:20px!important;display:inline!important}
+.zoombtn[hidden]{display:none}
+.lens{position:absolute;left:8px;right:8px;top:8px;z-index:5;background:var(--sea);border:3px solid var(--ink);border-radius:16px;box-shadow:5px 5px 0 var(--ink);overflow:hidden;animation:lensin .18s ease-out}
+.lens[hidden]{display:none}
+.lenshead{display:flex;align-items:center;gap:8px;background:#fff;border-bottom:3px solid var(--ink);padding:6px 8px 6px 12px;font-family:var(--display);font-weight:700;font-size:1.15rem}
+.lenshead > svg{width:22px!important;height:22px!important;flex:none}
+.lenshead span{flex:1;min-width:0}
+.lenshead button{font:inherit;font-family:var(--body);font-weight:800;font-size:.9rem;background:var(--ink);color:#fff;border:0;border-radius:30px;padding:5px 12px;cursor:pointer;white-space:nowrap}
+@keyframes lensin{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.ring.pulse{opacity:1;stroke:var(--focus);stroke-width:3.5;animation:ringpulse .7s ease-in-out infinite}
+@keyframes ringpulse{50%{stroke-opacity:.35}}
 .boat{animation:drift 5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes drift{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-8px) rotate(-2deg)}}
 .stampg{animation:slap .55s ease-out both;transform-box:fill-box;transform-origin:center}
@@ -290,17 +301,18 @@ img{max-width:100%}
           </g>
           <g id="stamp" pointer-events="none"></g>
         </svg>
-        <div class="mapfoot">Maine (pale aqua) was part of Massachusetts back then. Vermont (gray, dashed) was not one of the 13 colonies. The dashed box shows the close-up map below.</div>
+        <button type="button" class="zoombtn" id="zoomBtn" aria-controls="closeup"><svg aria-hidden="true"><use href="#lens"/></svg>Zoom in on the small colonies</button>
+        <div class="lens" id="closeup" hidden>
+          <div class="lenshead"><svg aria-hidden="true"><use href="#lens"/></svg><span>Close-up of the small colonies</span><button type="button" id="lensClose">Show whole map</button></div>
+          <svg id="zoom" viewBox="0 0 620 504" role="img" aria-label="Close-up map of the small colonies">
+            <rect x="-50" y="-50" width="720" height="610" fill="url(#dots)" pointer-events="none"/>
+            <g id="zland" class="landlayer"></g>
+            <g id="zlabels"></g>
+          </svg>
+        </div>
+        <div class="mapfoot">Maine (pale aqua) was part of Massachusetts back then. Vermont (gray, dashed) was not one of the 13 colonies. <b>Small colonies:</b> hold a piece over the dashed box for a moment, or press <b>Zoom in</b>, and a close-up opens right on the map.</div>
       </div>
-      <div class="mapbox">
-        <div class="zoomhead"><svg aria-hidden="true"><use href="#lens"/></svg>Close-up of the small colonies</div>
-        <svg id="zoom" viewBox="0 0 620 504" role="img" aria-label="Close-up map of the small colonies">
-          <rect x="-50" y="-50" width="720" height="610" fill="url(#dots)" pointer-events="none"/>
-          <g id="zland" class="landlayer"></g>
-          <g id="zlabels"></g>
-        </svg>
-        <div class="mapfoot">Tiny colonies are easier to hit here. You can drop pieces on either map.</div>
-      </div>
+    </div>
     </div>
 
     <div class="colR">
@@ -441,7 +453,7 @@ for(const id in GEO){
   el('path',{d:g.d,class:cls,'data-target':id,id:'p-'+id},landG);
 }
 for(const id in SMALL){ const g=GEO[id]; el('circle',{cx:g.cx,cy:g.cy,r:SMALL[id],class:'hit','data-target':id},landG); }
-el('path',{d:ZOOM.ring,class:'ring'},landG);
+const ringEl=el('path',{d:ZOOM.ring,class:'ring'},landG);
 const zlandG=document.getElementById('zland'), zlabelG=document.getElementById('zlabels');
 for(const id in ZOOM.paths){
   if(id==='WV'||id==='DC'){el('path',{d:ZOOM.paths[id].d,class:'other'},zlandG);continue;}
@@ -542,8 +554,34 @@ function targetAt(x,y){
 }
 // Every colony under a point (not only the top one), so a drop on a shared border counts for both colonies.
 function targetsAt(x,y){
-  const out=[]; for(const e of document.elementsFromPoint(x,y)){ const t=e.dataset&&e.dataset.target; if(t&&!out.includes(t)) out.push(t); } return out;
+  // When the close-up is open, a point on the close-up only counts colonies drawn in the close-up,
+  // and a point beside it only counts the big map underneath.
+  const open=!lensEl.hidden, inLens=open&&inRect(lensEl.getBoundingClientRect(),x,y);
+  const out=[]; for(const e of document.elementsFromPoint(x,y)){ const t=e.dataset&&e.dataset.target; if(!t) continue;
+    if(open && inLens!==lensEl.contains(e)) continue; if(!out.includes(t)) out.push(t); } return out;
 }
+function inRect(r,x,y){ return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom; }
+// ---- Close-up lens: opens on top of the big map, so the small colonies can be reached without scrolling ----
+const lensEl=document.getElementById('closeup'), zoomBtn=document.getElementById('zoomBtn');
+let lensAuto=false, dwellT=null, leaveT=null;
+function openLens(auto){ if(!lensEl.hidden) return; lensAuto=auto; lensEl.hidden=false; lensEl.classList.toggle('drop',!!auto); zoomBtn.hidden=true; ringEl.classList.remove('pulse'); }
+function closeLens(){ clearTimeout(dwellT); clearTimeout(leaveT); dwellT=leaveT=null; lensEl.hidden=true; lensAuto=false; zoomBtn.hidden=false; ringEl.classList.remove('pulse'); clearHover(); }
+function inRing(x,y){ const m=ringEl.getScreenCTM(); if(!m) return false; const pt=svg.createSVGPoint(); pt.x=x; pt.y=y; return ringEl.isPointInFill(pt.matrixTransform(m.inverse())) && inRect(svg.getBoundingClientRect(),x,y); }
+// While a piece is being moved: rest on the dashed box for a moment to open the close-up; move off it onto the big map to close it again.
+function lensTrack(x,y){
+  const open=!lensEl.hidden;
+  if(!open){
+    if(inRing(x,y)){ ringEl.classList.add('pulse'); if(!dwellT) dwellT=setTimeout(()=>{dwellT=null; openLens(true);},350); }
+    else { ringEl.classList.remove('pulse'); clearTimeout(dwellT); dwellT=null; }
+    return;
+  }
+  if(!lensAuto) return;
+  const onLens=inRect(lensEl.getBoundingClientRect(),x,y), onMap=inRect(svg.getBoundingClientRect(),x,y);
+  if(!onLens && onMap){ if(!leaveT) leaveT=setTimeout(()=>{leaveT=null; closeLens();},450); }
+  else { clearTimeout(leaveT); leaveT=null; }
+}
+zoomBtn.addEventListener('click',()=>openLens(false));
+document.getElementById('lensClose').addEventListener('click',closeLens);
 // Where did the piece land? Check the finger/pointer, the middle of the dragged sticker, and a small ring around the pointer.
 // If the right colony is under any of them, the drop counts; this stops near-misses on borders and thin coasts from being marked wrong.
 // Otherwise the colony under the pointer decides, so a truly wrong spot is still wrong.
@@ -641,6 +679,7 @@ document.addEventListener('pointermove',e=>{
   if(!drag.moved && Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6) return;
   if(!drag.moved){drag.moved=true;const g=drag.b.cloneNode(true);g.removeAttribute('id');g.classList.add('dragging');g.classList.remove('sel');document.body.appendChild(g);drag.ghost=g;drag.b.style.visibility='hidden';}
   drag.ghost.style.left=(e.clientX-drag.dx)+'px';drag.ghost.style.top=(e.clientY-drag.dy)+'px';
+  lensTrack(e.clientX,e.clientY);
   const [gx,gy]=ghostCenter(drag); setHover(resolveDrop(drag.kind,drag.val,e.clientX,e.clientY,gx,gy),drag.kind);
   drag.lastY=e.clientY; drag.lastX=e.clientX;
   if(!autoTimer) autoTimer=setInterval(autoScroll,16);
@@ -659,21 +698,23 @@ document.addEventListener('pointerup',e=>{
   const t=resolveDrop(d.kind,d.val,e.clientX,e.clientY,gx,gy); lastPt=[e.clientX,e.clientY];
   const ok = d.kind==='colony' ? dropColony(d.val,t) : dropYear(d.val,t);
   if(!ok && document.body.contains(d.b)){d.b.style.visibility='';if(t){d.b.classList.add('shake');setTimeout(()=>d.b.classList.remove('shake'),400);}}
-  selected=null;
+  selected=null; clearTimeout(dwellT); dwellT=null; ringEl.classList.remove('pulse'); if(lensAuto) setTimeout(closeLens,700);
 });
+svg.addEventListener('click',e=>{ if(lensEl.hidden && inRing(e.clientX,e.clientY)){ e.stopImmediatePropagation(); openLens(!!selected); } },true);
 document.querySelectorAll('#map,#zoom').forEach(s=>s.addEventListener('click',e=>{
   if(!selected) return;
   const t=resolveDrop(selected.dataset.kind,selected.dataset.val,e.clientX,e.clientY,null,null); if(!t) return;
   const s=selected; selected=null; s.classList.remove('sel'); lastPt=[e.clientX,e.clientY];
   const ok = s.dataset.kind==='colony' ? dropColony(s.dataset.val,t) : dropYear(s.dataset.val,t);
+  if(lensAuto) setTimeout(closeLens,700);
   if(!ok&&document.body.contains(s)){s.classList.add('shake');setTimeout(()=>s.classList.remove('shake'),400);}
 }));
 // tap mode hover preview with a mouse
 document.querySelectorAll('#map,#zoom').forEach(s=>s.addEventListener('pointermove',e=>{ if(selected&&!drag) setHover(resolveDrop(selected.dataset.kind,selected.dataset.val,e.clientX,e.clientY,null,null),selected.dataset.kind); }));
 // If the browser cancels a drag (a phone or tablet starts scrolling, a call comes in), put the piece back instead of leaving it stuck.
-document.addEventListener('pointercancel',()=>{ if(!drag) return; const d=drag; drag=null; clearHover(); if(autoTimer){clearInterval(autoTimer);autoTimer=null;} if(d.ghost) d.ghost.remove(); if(document.body.contains(d.b)) d.b.style.visibility=''; });
+document.addEventListener('pointercancel',()=>{ clearTimeout(dwellT); dwellT=null; ringEl.classList.remove('pulse'); if(!drag) return; const d=drag; drag=null; clearHover(); if(autoTimer){clearInterval(autoTimer);autoTimer=null;} if(d.ghost) d.ghost.remove(); if(document.body.contains(d.b)) d.b.style.visibility=''; });
 document.addEventListener('click',e=>{ if(e.target.id==='jumpBonus'){ (document.getElementById('bc-'+state.order[state.order.length-1])||document.getElementById('bonus')).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); } });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected){selected.classList.remove('sel');selected=null;}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){ if(selected){selected.classList.remove('sel');selected=null;} else if(!lensEl.hidden) closeLens(); }});
 
 const Q1OPTS=[['king','The king gave the land','A royal charter or grant from the king, or from someone the king gave land to'],['breakaway','A group broke away','People who disagreed with church or colony leaders left, or were forced out, and started their own'],['country','Another country started it first','People from another European country settled it before the English took over']];
 const Q2OPTS=[['business','Business','To make money: trade, farming, fishing, selling land'],['religious','Religious','To worship freely or protect a religious group']];
