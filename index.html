@@ -49,7 +49,7 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,5.5vw,3rem)
 }
 
 /* Shared card look */
-.score,.dock,.mapbox,.bonus,.done-panel,.legend{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink)}
+.score,.dock,.mapbox,.bonus,.done-panel,.legend,.yearbox{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink)}
 
 /* Score */
 .score{padding:14px 16px;display:grid;gap:12px;min-width:0}
@@ -83,6 +83,7 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,5.5vw,3rem)
 .board{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:860px){.board{grid-template-columns:minmax(0,1fr)}}
 .maps{display:grid;gap:22px;min-width:0}
+.yearbox{padding:18px 20px 20px}.yearbox #yearCard.needyear{outline-offset:8px}.yearbox[hidden]{display:none}
 .mapbox{overflow:hidden;background:var(--sea)}
 .mapbox svg{display:block;width:100%;height:auto;touch-action:none}
 .colony{fill:var(--land);stroke:var(--ink);stroke-width:2;stroke-linejoin:round;transition:fill .5s}
@@ -328,6 +329,7 @@ img{max-width:100%}
         </div>
         <div class="mapfoot">Maine (pale aqua) was part of Massachusetts back then. Vermont (gray, dashed) was not one of the 13 colonies. <b>Small colonies:</b> click inside the dashed box or press <b>Zoom in</b>, and a close-up opens right on the map. Then click the colony there.</div>
       </div>
+      <div class="yearbox" id="yearHome" hidden></div>
     </div>
     </div>
 
@@ -895,6 +897,11 @@ document.getElementById('reset').addEventListener('click',()=>{
 });
 
 
+// Laptops and desktops: the years get their own box under the map. Phones: they stay in the bottom panel.
+const yearCardEl=document.getElementById('yearCard'), yearHome=document.getElementById('yearHome'), colTray=document.querySelector('.dock .trayblock');
+const wideMQ=matchMedia('(min-width:861px)');
+function placeYears(){ if(wideMQ.matches){ yearHome.appendChild(yearCardEl); yearHome.hidden=false; } else { colTray.after(yearCardEl); yearHome.hidden=true; } }
+placeYears(); (wideMQ.addEventListener?wideMQ.addEventListener('change',placeYears):wideMQ.addListener(placeYears));
 load(); paint(); renderTray(); renderBonus(); renderTeams();
 </script>
 
