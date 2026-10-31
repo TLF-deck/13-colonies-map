@@ -27,8 +27,8 @@ button{font-family:inherit;cursor:pointer}
 /* Header */
 header{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .hdr-l{display:flex;align-items:center;flex-wrap:wrap;gap:6px 16px}
-.hdr-l .topreset{margin-left:auto}
-@media (min-width:861px){.hdr-l{flex-wrap:nowrap}.hdr-l .sub{flex:1;min-width:0}.hdr-l .brand,.hdr-l .topreset{flex:none}}
+.hdr-l .topbtns{margin-left:auto;display:flex;gap:8px;flex:none}
+@media (min-width:861px){.hdr-l{flex-wrap:nowrap}.hdr-l .sub{flex:1;min-width:0}.hdr-l .brand,.hdr-l .topreset,.hdr-l .topmenu{flex:none}}
 h1{font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,5.5vw,3rem);line-height:1;margin:0;text-shadow:3px 3px 0 var(--sea)}
 .sub{margin:0;font-size:1.15rem}
 .brand{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:2px solid var(--ink);border-radius:20px;padding:2px 10px;white-space:nowrap;background:#fff;color:var(--ink);text-decoration:none;transition:transform .1s}
@@ -274,6 +274,24 @@ button.ctl.barrow{flex:1;min-width:0;display:flex;align-items:center;justify-con
 body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
+/* Mode select screen */
+.modescreen{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:#fff radial-gradient(#CBD6E8 1.5px,transparent 1.7px);background-size:22px 22px;overflow:auto}
+.modecard{background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:8px 8px 0 var(--ink);padding:28px 28px 30px;max-width:720px;width:100%;display:grid;gap:18px;text-align:center}
+.modecard h1{font-size:clamp(2.2rem,6vw,3rem)}
+.modecard .q{margin:0;font-family:var(--display);font-weight:700;font-size:1.6rem}
+.modeopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:560px){.modeopts{grid-template-columns:minmax(0,1fr)}}
+.modeopt{font:inherit;color:var(--ink);background:var(--soft);border:3px solid var(--ink);border-radius:20px;box-shadow:5px 5px 0 var(--ink);padding:18px 16px;display:grid;gap:8px;justify-items:center;transition:transform .1s,box-shadow .1s}
+.modeopt:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink);background:#fff}
+.modeopt:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.modeopt:focus-visible{outline:4px solid var(--focus);outline-offset:4px}
+.modeopt svg{width:56px;height:56px}
+.modeopt b{font-family:var(--display);font-weight:700;font-size:1.6rem;line-height:1}
+.modeopt span{font-size:1rem;font-weight:700;color:var(--muted);line-height:1.35}
+.modeback{justify-self:center;font:inherit;font-weight:800;font-size:1.05rem;color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:30px;padding:6px 18px;box-shadow:3px 3px 0 var(--ink);min-height:44px}
+.modenote{margin:0;font-size:1rem;font-weight:700;color:var(--bad)}
+.tile.solo{opacity:1;transform:none;background:#fff;border-color:var(--ink);cursor:default}
+.tile.solo .tn{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -283,16 +301,29 @@ img{max-width:100%}
   <symbol id="lens" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M15 15l5.5 5.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol></defs>
 </svg>
 
+<div class="modescreen" id="modeScreen" role="dialog" aria-modal="true" aria-labelledby="modeQ" hidden>
+  <div class="modecard">
+    <h1>Colony Mapping</h1>
+    <p class="q" id="modeQ">How are you playing?</p>
+    <div class="modeopts">
+      <button type="button" class="modeopt" data-mode="solo"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4" fill="#FFD23F" stroke="#1E2A44" stroke-width="1.8"/><path d="M4 21c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5z" fill="#FFD23F" stroke="#1E2A44" stroke-width="1.8" stroke-linejoin="round"/></svg><b>Single player</b><span>Play on your own. Earn as many points as you can.</span></button>
+      <button type="button" class="modeopt" data-mode="teams"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="8" r="3.2" fill="#F26B83" stroke="#1E2A44" stroke-width="1.6"/><circle cx="17" cy="8" r="3.2" fill="#9B7BEA" stroke="#1E2A44" stroke-width="1.6"/><path d="M1.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6z" fill="#F26B83" stroke="#1E2A44" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6z" fill="#9B7BEA" stroke="#1E2A44" stroke-width="1.6" stroke-linejoin="round"/></svg><b>Teams</b><span>2 to 6 teams take turns. Most points wins!</span></button>
+    </div>
+    <p class="modenote" id="modeNote" hidden>Picking a mode starts a new game.</p>
+    <button type="button" class="modeback" id="modeBack" hidden>← Back to my game</button>
+  </div>
+</div>
+
 <div class="wrap">
   <header>
     <div class="titleblock">
-      <div class="hdr-l"><h1>Colony Mapping</h1><p class="sub">The 13 colonies fell off the map! Can you put them back?</p><a class="brand" href="https://www.languagefirm.org/">The Language Firm</a><button class="ctl topreset" id="reset" type="button">Start over</button></div>
+      <div class="hdr-l"><h1>Colony Mapping</h1><p class="sub">The 13 colonies fell off the map! Can you put them back?</p><a class="brand" href="https://www.languagefirm.org/">The Language Firm</a><span class="topbtns"><button class="ctl topmenu" id="menuBtn" type="button" aria-controls="modeScreen">Menu</button><button class="ctl topreset" id="reset" type="button">Start over</button></span></div>
       <div class="how">
         <div><b>1</b>Click a colony, then click its spot on the map</div>
         <div><b>2</b>Click its year</div>
         <div><b>3</b>Bonus questions (optional)</div>
       </div>
-      <p class="howrule">You aren't awarded a full point until your year is correctly chosen. Your turn ends after you skip or answer the bonus questions. A wrong spot on the map also ends your turn.</p>
+      <p class="howrule" id="howRule">You aren't awarded a full point until your year is correctly chosen. Your turn ends after you skip or answer the bonus questions. A wrong spot on the map also ends your turn.</p>
     </div>
   </header>
 
@@ -335,7 +366,7 @@ img{max-width:100%}
 
     <div class="colR">
       <div class="score" aria-live="polite">
-        <div class="scorehead"><b class="ribbon">Most points wins!</b>
+        <div class="scorehead"><b class="ribbon" id="ribbon">Most points wins!</b>
           <span class="teamct" id="teamCt">Teams <button type="button" id="tMinus" aria-label="Fewer teams">−</button><b id="tCount">2</b><button type="button" id="tPlus" aria-label="More teams">+</button></span></div>
         <div class="winner" id="winner" hidden></div>
         <div class="teams" id="teamTiles"></div>
@@ -348,8 +379,8 @@ img{max-width:100%}
       </div>
     <div class="side">
       <div class="dock">
-        <div class="turnrow"><span>Whose turn?</span><div class="turnchips" id="turnChips"></div></div>
-        <p class="turnhint">Click any team to make it their turn.</p>
+        <div class="turnrow" id="turnRow"><span>Whose turn?</span><div class="turnchips" id="turnChips"></div></div>
+        <p class="turnhint" id="turnHint">Click any team to make it their turn.</p>
         <div class="stepline" id="stepLine"></div>
         <div class="feedback" id="feedback" aria-live="polite">
           <div class="tag">Let's start!</div>
@@ -389,7 +420,7 @@ img{max-width:100%}
       <h2 id="bonusTitle">Bonus Points</h2>
       <div class="bpts"><b id="bonusCount">0</b> <span class="bplabel">bonus points</span></div>
     </div>
-    <p class="bintro">Match a colony's year to open its bonus card. Answer the 2 questions or skip them. Each right answer = 1 bonus point for the team that matched it, up to 2.</p>
+    <p class="bintro" id="bonusIntro">Match a colony's year to open its bonus card. Answer the 2 questions or skip them. Each right answer = 1 bonus point for the team that matched it, up to 2.</p>
     <div id="bonusBody"></div>
       </section>
 </div>
@@ -425,22 +456,58 @@ const fb=document.getElementById('feedback');
 const TEAM_COLORS=['#1B7F45','#2457D6','#8B5A2B','#3B3B3B','#C2410C','#7E22CE'];
 const TEAM_ICONS=['M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z','M13 2L4 14h6l-1 8 9-12h-6z','M12 21s-7.5-4.6-9.5-9.3C1.2 8.6 3 5 6.5 5c2 0 3.4 1.1 4.2 2.4h2.6C14.1 6.1 15.5 5 17.5 5 21 5 22.8 8.6 21.5 11.7 19.5 16.4 12 21 12 21z','M14 2a9 9 0 1 0 8 13A8 8 0 0 1 14 2z','M12 2l10 10-10 10L2 12z','M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z'];
 const ticon=i=>`<svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="${TEAM_ICONS[i]}" fill="currentColor"/></svg>`;
-let state={placed:{},years:{},mapMisses:0,yearMisses:0,stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:2,turn:0,owner:{},finished:false};
-const tname=i=>'Team '+(i+1);
+let state={placed:{},years:{},mapMisses:0,yearMisses:0,stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:2,turn:0,owner:{},finished:false,mode:null,teamCount:2};
+// Single player: one score, no turns, no team labels. Teams: the original game, unchanged.
+const SOLO=()=>state.mode==='solo';
+const tname=i=>SOLO()?'You':'Team '+(i+1);
+const TEAM_RULE="You aren't awarded a full point until your year is correctly chosen. Your turn ends after you skip or answer the bonus questions. A wrong spot on the map also ends your turn.";
+const SOLO_RULE="You aren't awarded a full point until your year is correctly chosen. A wrong spot on the map? Just try again.";
+const TEAM_BINTRO="Match a colony's year to open its bonus card. Answer the 2 questions or skip them. Each right answer = 1 bonus point for the team that matched it, up to 2.";
+const SOLO_BINTRO="Match a colony's year to open its bonus card. Answer the 2 questions or skip them. Each right answer = 1 bonus point, up to 2.";
+let menuOpen=false;
+function hasProgress(){ return Object.keys(state.placed).length>0; }
+function applyMode(){
+  const solo=SOLO();
+  document.getElementById('modeScreen').hidden=!!state.mode&&!menuOpen;
+  document.getElementById('modeBack').hidden=!state.mode;
+  document.getElementById('modeNote').hidden=!(state.mode&&hasProgress());
+  document.querySelectorAll('.modeopt').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===state.mode)));
+  document.getElementById('teamCt').hidden=solo;
+  document.getElementById('turnRow').hidden=solo;
+  document.getElementById('turnHint').hidden=solo;
+  document.getElementById('howRule').textContent=solo?SOLO_RULE:TEAM_RULE;
+  document.getElementById('bonusIntro').textContent=solo?SOLO_BINTRO:TEAM_BINTRO;
+  document.getElementById('ribbon').textContent=solo?'Go for 39 points!':'Most points wins!';
+  if(!state.mode||menuOpen) setTimeout(()=>{const b=document.querySelector('.modeopt');if(b)b.focus();},0);
+}
+function chooseMode(m){
+  state.mode=m; state.teams= m==='solo' ? 1 : (state.teamCount||2); state.turn=0; lastScores=null; save();
+  applyMode(); paint(); renderTray(); renderBonus(); renderTeams();
+  say('info',"Let's start!",'Click a colony, then click where it belongs on the map.');
+}
+function closeMenu(){ menuOpen=false; applyMode(); document.getElementById('menuBtn').focus(); }
+document.getElementById('modeScreen').addEventListener('click',e=>{
+  if(e.target.closest('#modeBack')){ closeMenu(); return; }
+  const b=e.target.closest('[data-mode]'); if(!b) return;
+  menuOpen=false;
+  if(hasProgress()||state.finished) newGame(b.dataset.mode); else chooseMode(b.dataset.mode);
+});
+document.getElementById('menuBtn').addEventListener('click',()=>{ menuOpen=true; applyMode(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&menuOpen&&state.mode) closeMenu(); });
 // Turns pass automatically, as in the paper rules. Clicking a team tile still overrides.
 function nextTurn(){ state.turn=(state.turn+1)%state.teams; }
 function pendingYear(){ return Object.keys(state.placed).find(id=>!state.years[id]); }
 function bDone(id){ const b=state.bonus[id]; return !!b&&!!(b.skipped||(b.q1&&b.q2)); }
 function pendingBonus(){ return state.order.find(id=>!bDone(id)); }
 function stepInfo(){
-  const who=`<b>${tname(state.turn)}</b>`;
+  const who=SOLO()?'':`<b>${tname(state.turn)}</b>, `;
   if(state.finished) return {n:0,html:'Game over! Scroll down to see all 13 colonies in order.'};
-  const py=pendingYear(); if(py) return {n:2,id:py,html:`<span class="sn">Step 2 of 3</span>${who}, click the year for <b>${BYID[py].name}</b>. <span class="must">You aren't awarded a full point until your year is correctly chosen.</span>`};
-  const pb=pendingBonus(); if(pb) return {n:3,id:pb,html:`<span class="sn">Step 3 of 3</span>Bonus questions for <b>${BYID[pb].name}</b> are optional. Answer them below, or skip them to pass to the next team. The next colony waits until then.`};
+  const py=pendingYear(); if(py) return {n:2,id:py,html:`<span class="sn">Step 2 of 3</span>${who}${SOLO()?'Click':'click'} the year for <b>${BYID[py].name}</b>. <span class="must">You aren't awarded a full point until your year is correctly chosen.</span>`};
+  const pb=pendingBonus(); if(pb) return {n:3,id:pb,html:`<span class="sn">Step 3 of 3</span>Bonus questions for <b>${BYID[pb].name}</b> are optional. Answer them below, or skip them${SOLO()?'':' to pass to the next team'}. The next colony waits until then.`};
   if(state.order.length>=13) return {n:0,html:'All 13 colonies are matched!'};
-  return {n:1,html:`<span class="sn">Step 1 of 3</span>${who}, click a colony, then click where it goes on the map.`};
+  return {n:1,html:`<span class="sn">Step 1 of 3</span>${who}${SOLO()?'Click':'click'} a colony, then click where it goes on the map.`};
 }
-function skipBtn(id){ return `<button type="button" class="skipb" data-skip="${id}">Skip bonus questions: next team →</button>`; }
+function skipBtn(id){ return `<button type="button" class="skipb" data-skip="${id}">${SOLO()?'Skip bonus questions →':'Skip bonus questions: next team →'}</button>`; }
 function nudgeStep(){ const el=document.getElementById('stepLine'); el.classList.remove('nudge'); void el.offsetWidth; el.classList.add('nudge'); el.scrollIntoView({block:'nearest'}); }
 function updateStep(){
   const el=document.getElementById('stepLine'); if(!el) return; const s=stepInfo();
@@ -458,25 +525,28 @@ function renderTeams(){
   const tiles=document.getElementById('teamTiles'), chips=document.getElementById('turnChips');
   const scores=[...Array(state.teams).keys()].map(teamScore);
   let th='',ch='';
-  for(let i=0;i<state.teams;i++){
+  if(SOLO()){ const s=teamScore(0), pp=teamParts(0);
+    th=`<div class="tile solo on" data-solo="1"><span class="tn">Your points</span><span class="tp">${s}<small> point${s===1?'':'s'}</small></span><span class="tb">${pp[0]} match${pp[0]===1?'':'es'} + ${pp[1]} bonus</span></div>`; }
+  else for(let i=0;i<state.teams;i++){
     const s=teamScore(i), on=i===state.turn, win=state.finished&&winners().list.includes(i);
     th+=`<button type="button" class="tile${on?' on':''}${win?' win':''}" style="--tc:${TEAM_COLORS[i]}" data-team="${i}" aria-pressed="${on}"><span class="tn">${ticon(i)}${tname(i)}${win?'<span class="badge win">Winner!</span>':on?'<span class="badge">Your turn!</span>':''}</span><span class="tp">${s}<small> point${s===1?'':'s'}</small></span><span class="tb">${teamParts(i)[0]} match${teamParts(i)[0]===1?'':'es'} + ${teamParts(i)[1]} bonus</span></button>`;
     ch+=`<button type="button" class="tchip${on?' on':''}" style="--tc:${TEAM_COLORS[i]}" data-team="${i}" aria-pressed="${on}">${ticon(i)}${tname(i)}</button>`;
   }
   tiles.innerHTML=th; chips.innerHTML=ch; updateStep();
-  if(lastScores && lastScores.length===scores.length){ scores.forEach((s,i)=>{ const d=s-lastScores[i]; if(d>0){ const tile=tiles.querySelector(`[data-team="${i}"]`); if(tile) tile.insertAdjacentHTML('beforeend',`<span class="pop">+${d}</span>`); } }); }
+  if(lastScores && lastScores.length===scores.length){ scores.forEach((s,i)=>{ const d=s-lastScores[i]; if(d>0){ const tile=tiles.querySelector(SOLO()?'[data-solo]':`[data-team="${i}"]`); if(tile) tile.insertAdjacentHTML('beforeend',`<span class="pop">+${d}</span>`); } }); }
   lastScores=scores;
   document.getElementById('tCount').textContent=state.teams;
   const locked=state.order.length>0;
   document.getElementById('tMinus').disabled=locked||state.teams<=2; document.getElementById('tPlus').disabled=locked||state.teams>=6;
   document.getElementById('teamCt').title= locked ? 'Start over to change the number of teams' : '';
   const w=document.getElementById('winner');
-  if(state.finished){ const W=winners(); w.hidden=false; w.textContent = W.list.length===1 ? `${tname(W.list[0])} wins with ${W.best} points!` : `It's a tie! ${W.list.map(tname).join(' and ')} have ${W.best} points.`; } else w.hidden=true;
+  if(state.finished&&SOLO()){ const s=teamScore(0); w.hidden=false; w.textContent=`You finished with ${s} point${s===1?'':'s'} out of 39!`; }
+  else if(state.finished){ const W=winners(); w.hidden=false; w.textContent = W.list.length===1 ? `${tname(W.list[0])} wins with ${W.best} points!` : `It's a tie! ${W.list.map(tname).join(' and ')} have ${W.best} points.`; } else w.hidden=true;
 }
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-team]'); if(t){ state.turn=+t.dataset.team; save(); renderTeams(); renderBonus(); say('info',`${tname(state.turn)}'s turn`,stepInfo().html.replace(/<span class="sn">[^<]*<\/span>/,'')); return; }
-  if(e.target.id==='tMinus'&&state.teams>2&&!state.order.length){state.teams--; if(state.turn>=state.teams) state.turn=0; save(); renderTeams();}
-  if(e.target.id==='tPlus'&&state.teams<6&&!state.order.length){state.teams++; save(); renderTeams();}
+  if(e.target.id==='tMinus'&&!SOLO()&&state.teams>2&&!state.order.length){state.teams--; state.teamCount=state.teams; if(state.turn>=state.teams) state.turn=0; save(); renderTeams();}
+  if(e.target.id==='tPlus'&&!SOLO()&&state.teams<6&&!state.order.length){state.teams++; state.teamCount=state.teams; save(); renderTeams();}
 });
 
 function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
@@ -651,12 +721,12 @@ function ghostCenter(d){ if(!d||!d.ghost) return [null,null]; const r=d.ghost.ge
 function dropColony(id,target){
   const c=BYID[id];
   if(!target){return false;}
-  const py=pendingYear(); if(py){ say('info',`Year first! ${tname(state.turn)}'s turn is not over.`,`Click the year for <b>${BYID[py].name}</b> before anyone places another colony.`); return false; }
+  const py=pendingYear(); if(py){ say('info',SOLO()?'Year first!':`Year first! ${tname(state.turn)}'s turn is not over.`,`Click the year for <b>${BYID[py].name}</b> before ${SOLO()?'you place':'anyone places'} another colony.`); return false; }
   const pb=pendingBonus(); if(pb){ nudgeStep(); return false; }
   if(target==='ME') target= id==='MA' ? 'MA' : 'ME';
   if(target===id){
     state.placed[id]=true; const st=!state.missMap[id]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
-    stamp(id,'Nice!'); say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. <b>Your turn is not over:</b> now click its year.`);
+    stamp(id,'Nice!'); say('ok',cheer(),`<b>${c.name}</b> is in the <b>${REGION_NAME[c.region]}</b> colonies. ${SOLO()?'Now click its year.':'<b>Your turn is not over:</b> now click its year.'}`);
     return true;
   }
   state.mapMisses++; state.missMap[id]=true;
@@ -667,6 +737,7 @@ function dropColony(id,target){
   else if(target==='ME') msg='That land was part of Massachusetts back then.';
   else if(state.placed[target]) msg=`${BYID[target].name} is already there.`;
   else msg=`That spot is not ${c.name}.`;
+  if(SOLO()){ save(); renderTeams(); renderBonus(); say('no','Not that spot. Try again!',msg); return false; }
   const was=tname(state.turn); nextTurn(); save(); renderTeams(); renderBonus();
   say('no',`Not that spot. ${was}'s turn is over.`,msg+` <b>${tname(state.turn)}, you're up!</b>`);
   return false;
@@ -682,7 +753,7 @@ function dropYear(year,target){
   if(+year===c.year){
     state.years[target]=true; if(!state.order.includes(target)) state.order.push(target); state.owner[target]=state.turn; const st=!state.missYear[target]; if(st) state.stars++; save(); paint(); renderTray(); burst(lastPt&&lastPt[0],lastPt&&lastPt[1]);
     checkWinner(); renderTeams();
-    stamp(target,String(c.year)); say('ok',`${cheer()} ${c.year}`,`<b>+1 point for ${tname(state.turn)}!</b> ${c.fact}`);
+    stamp(target,String(c.year)); say('ok',`${cheer()} ${c.year}`,`<b>${SOLO()?'+1 point!':'+1 point for '+tname(state.turn)+'!'}</b> ${c.fact}`);
     renderBonus();
     return true;
   }
@@ -797,16 +868,16 @@ function bonusCard(id){
     else if(b.skipped && isKey(id,q,val)) cls+=' right';
     return `<button type="button" class="${cls}" data-id="${id}" data-q="${q}" data-v="${val}" ${ans||b.skipped?'disabled':''}><b>${label}</b><span>${desc}</span></button>`;
   }).join('');
-  const why=(q)=>{const ans=q===1?b.q1:b.q2; if(!ans&&!b.skipped) return '<p class="bpick">Click your team\'s answer.</p>'; const correct=q===1?key[0]:key[1]; const ok=!!ans&&okAns(id,q,ans);
+  const why=(q)=>{const ans=q===1?b.q1:b.q2; if(!ans&&!b.skipped) return `<p class="bpick">${SOLO()?'Click your answer.':'Click your team\'s answer.'}</p>`; const correct=q===1?key[0]:key[1]; const ok=!!ans&&okAns(id,q,ans);
     const name = correct==='either' ? 'Either answer' : Array.isArray(correct) ? correct.map((c,i)=>{const t=(q===1?Q1OPTS:Q2OPTS).find(o=>o[0]===c)[1];return i?t[0].toLowerCase()+t.slice(1):t;}).join(' or ') : (q===1?Q1OPTS:Q2OPTS).find(o=>o[0]===correct)[1];
-    return `<p class="bwhy ${ok?'':'no'}"><b>${!ans?'Skipped.':ok?'+1 bonus point for '+tname(state.owner[id]??0)+'!':'No point.'}</b> The answer: <b>${name}</b>. ${q===1?key[2]:key[3]}</p>`;};
+    return `<p class="bwhy ${ok?'':'no'}"><b>${!ans?'Skipped.':ok?(SOLO()?'+1 bonus point!':'+1 bonus point for '+tname(state.owner[id]??0)+'!'):'No point.'}</b> The answer: <b>${name}</b>. ${q===1?key[2]:key[3]}</p>`;};
   const fin=bDone(id);
   const own=state.owner[id]??0; const got=(b.q1&&okAns(id,1,b.q1)?1:0)+(b.q2&&okAns(id,2,b.q2)?1:0);
   return `<div class="bcard${fin?' fin':''}" id="bc-${id}" style="--tc:${TEAM_COLORS[own]}">
-    <h3><i style="background:var(--${c.region})"></i>${c.name}<span class="who" style="--tc:${TEAM_COLORS[state.owner[id]??0]}">${tname(state.owner[id]??0)}</span>${fin?`<em>${b.skipped?'Skipped · ':''}${(b.q1&&okAns(id,1,b.q1)?1:0)+(b.q2&&okAns(id,2,b.q2)?1:0)} of 2 bonus points</em>`:'<em class="open">Optional</em>'}</h3>
+    <h3><i style="background:var(--${c.region})"></i>${c.name}${SOLO()?'':`<span class="who" style="--tc:${TEAM_COLORS[state.owner[id]??0]}">${tname(state.owner[id]??0)}</span>`}${fin?`<em>${b.skipped?'Skipped · ':''}${(b.q1&&okAns(id,1,b.q1)?1:0)+(b.q2&&okAns(id,2,b.q2)?1:0)} of 2 bonus points</em>`:'<em class="open">Optional</em>'}</h3>
     <div class="bq"><div class="qt">1. How did ${c.name} begin? <small>Pick 1 of 3</small></div><div class="bopts three">${opts(1,Q1OPTS)}</div>${why(1)}</div>
     <div class="bq"><div class="qt">2. What was the main reason? <small>Pick 1 of 2</small></div><div class="bopts">${opts(2,Q2OPTS)}</div>${why(2)}</div>
-    <p class="btally">${tname(own)} bonus${fin?'':' so far'}: <b>${got}</b> of 2</p>
+    <p class="btally">${SOLO()?'Your':tname(own)} bonus${fin?'':' so far'}: <b>${got}</b> of 2</p>
     ${fin?'':skipBtn(id)}
   </div>`;
 }
@@ -834,7 +905,8 @@ document.getElementById('bonusBody').addEventListener('click',e=>{
   save();
   if(b.q1&&b.q2){ // keep the just-finished card in place until the next render triggered by gameplay
     const card=document.getElementById('bc-'+id); card.outerHTML=bonusCard(id);
-    if(state.order.length<13){ nextTurn(); save(); say('info',`${tname(state.turn)}'s turn`,`Bonus done for ${BYID[id].name}. <b>${tname(state.turn)}</b>, click a colony, then click where it goes on the map.`); }
+    if(state.order.length<13&&SOLO()){ save(); say('info','Bonus done',`Bonus done for ${BYID[id].name}. Click a colony, then click where it goes on the map.`); }
+    else if(state.order.length<13){ nextTurn(); save(); say('info',`${tname(state.turn)}'s turn`,`Bonus done for ${BYID[id].name}. <b>${tname(state.turn)}</b>, click a colony, then click where it goes on the map.`); }
     const bp=bonusPoints(); document.getElementById('bonusCount').textContent=bp; document.getElementById('cntBonus').textContent=bp+'/26'; document.getElementById('barBonus').style.width=(bp/26*100)+'%'; document.querySelectorAll('.bplabel').forEach(s=>s.textContent=bp===1?'bonus point':'bonus points');
   } else renderBonus();
   if(ok) burst(r.left+r.width/2,r.top+r.height/2);
@@ -848,7 +920,8 @@ document.addEventListener('click',e=>{
   const b=state.bonus[id]||(state.bonus[id]={}); b.skipped=true;
   if(state.order.length<13) nextTurn();
   save(); renderBonus(); checkWinner(); renderTeams(); updateArrow();
-  if(state.order.length<13) say('info',`${tname(state.turn)}'s turn`,`Bonus questions for ${BYID[id].name} were skipped. <b>${tname(state.turn)}</b>, click a colony, then click where it goes on the map.`);
+  if(state.order.length<13&&SOLO()) say('info','Bonus skipped',`Bonus questions for ${BYID[id].name} were skipped. Click a colony, then click where it goes on the map.`);
+  else if(state.order.length<13) say('info',`${tname(state.turn)}'s turn`,`Bonus questions for ${BYID[id].name} were skipped. <b>${tname(state.turn)}</b>, click a colony, then click where it goes on the map.`);
   else { say('info','Bonus skipped',`Bonus questions for ${BYID[id].name} were skipped.`); showDone(); }
 });
 const arrowEl=document.getElementById('bonusArrow');
@@ -875,9 +948,13 @@ arrowEl.addEventListener('click',()=>{
 addEventListener('scroll',updateArrow,{passive:true}); addEventListener('resize',updateArrow);
 function showDone(){
   const p=document.getElementById('donePanel'); p.hidden=false;
+  if(SOLO()){ const s=teamScore(0);
+    document.getElementById('doneScore').textContent = state.finished ? `You finished with ${s} point${s===1?'':'s'} out of 39! Here are all 13 colonies in order, from first to last.` : `All 13 colonies are matched. Answer or skip the open bonus cards to see your final score! Points so far: ${s}. Here are all 13 colonies in order, from first to last.`; }
+  else {
   const st=[...Array(state.teams).keys()].map(i=>`${tname(i)}: ${teamScore(i)}`).join(' · ');
   const W=winners(), head = !state.finished ? 'All 13 colonies are matched. Answer or skip the open bonus cards to see who wins! ' : (W.list.length===1 ? `${tname(W.list[0])} won! ` : `It's a tie between ${W.list.map(tname).join(' and ')}! `);
   document.getElementById('doneScore').textContent=`${head}Points so far: ${st}. Here are all 13 colonies in order, from first to last.`.replace('Points so far', state.finished?'Final points':'Points so far');
+  }
   const tl=document.getElementById('timeline'); tl.innerHTML='';
   [...COLONIES].sort((a,b)=>a.year-b.year||a.name.localeCompare(b.name)).forEach(c=>{
     const li=document.createElement('li');
@@ -889,14 +966,17 @@ function showDone(){
 // Each browser tab keeps its own game (sessionStorage): a reload resumes it, but another tab, window or computer never sees it.
 try{localStorage.removeItem('colonyMappingTeams');}catch(e){} // clear the old shared save from earlier versions
 function save(){try{sessionStorage.setItem('colonyMappingTeams',JSON.stringify(state));}catch(e){}}
-function load(){try{const s=JSON.parse(sessionStorage.getItem('colonyMappingTeams')||'null');if(s&&s.placed)state=Object.assign({stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:2,turn:0,owner:{},finished:false},s);}catch(e){}}
+function load(){try{const s=JSON.parse(sessionStorage.getItem('colonyMappingTeams')||'null');if(s&&s.placed)state=Object.assign({stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:2,turn:0,owner:{},finished:false,mode:null,teamCount:2},s); if(!state.mode && Object.keys(state.placed).length){ state.mode='teams'; state.teamCount=state.teams; } }catch(e){}}
 
-document.getElementById('reset').addEventListener('click',()=>{
-  const keepTeams=state.teams;
-  state={placed:{},years:{},mapMisses:0,yearMisses:0,stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:keepTeams,turn:0,owner:{},finished:false};save();
+// Start over replays the same mode. The Menu button is where you switch between single player and teams.
+document.getElementById('reset').addEventListener('click',()=>newGame(state.mode));
+function newGame(mode){
+  const keepTeams=state.teamCount||2;
+  state={placed:{},years:{},mapMisses:0,yearMisses:0,stars:0,missMap:{},missYear:{},order:[],bonus:{},teams:mode==='solo'?1:keepTeams,turn:0,owner:{},finished:false,mode:mode||null,teamCount:keepTeams};save();
   pieceOrder=shuffle(COLONIES.map(c=>c.id)); yearOrder=shuffle(COLONIES.map(c=>c.year));
-  paint();renderTray();renderBonus();renderTeams();say('info',"Let's start!",'Click a colony, then click where it belongs on the map.');
-});
+  document.getElementById('donePanel').hidden=true; lastScores=null;
+  applyMode(); paint();renderTray();renderBonus();renderTeams();say('info',"Let's start!",'Click a colony, then click where it belongs on the map.');
+}
 
 
 // Laptops and desktops: the years get their own box under the map. Phones: they stay in the bottom panel.
@@ -904,7 +984,7 @@ const yearCardEl=document.getElementById('yearCard'), yearHome=document.getEleme
 const wideMQ=matchMedia('(min-width:861px)');
 function placeYears(){ if(wideMQ.matches){ yearHome.appendChild(yearCardEl); yearHome.hidden=false; } else { colTray.after(yearCardEl); yearHome.hidden=true; } }
 placeYears(); (wideMQ.addEventListener?wideMQ.addEventListener('change',placeYears):wideMQ.addListener(placeYears));
-load(); paint(); renderTray(); renderBonus(); renderTeams();
+load(); applyMode(); paint(); renderTray(); renderBonus(); renderTeams();
 </script>
 
 </body>
